@@ -29,11 +29,42 @@
             android:layout_height="250dp"
             android:background="@color/cardview_dark_background" />
 
-        <EditText
-            android:id="@+id/mEditText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="/sdcard/1080.mp4" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnOpenLocal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="开始" />
+
+            <EditText
+                android:id="@+id/mEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="/sdcard/1080.mp4" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnOpenRTMP"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="开始" />
+
+            <EditText
+                android:id="@+id/mEditTextRTMP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="/sdcard/1080.mp4" />
+        </LinearLayout>
+
 
         <androidx.appcompat.widget.AppCompatSeekBar
             android:id="@+id/mSeekBar"
