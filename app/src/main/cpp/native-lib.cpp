@@ -16,13 +16,6 @@ Java_com_joyy_nativecpp_MainActivity_stringFromJNI(
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url) {
-    // 生成JNI String
-    const char *str = env->GetStringUTFChars(url, 0);
-
-}
-extern "C"
-JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_testJString(JNIEnv *env, jobject thiz, jstring str_) {
     // （1）生成JNI String
     char const *str = "hello world!";
@@ -257,4 +250,42 @@ Java_com_joyy_nativecpp_MainActivity_releaseSDK(JNIEnv *env, jobject thiz) {
     //释放person C++对象
     free(person);
     env->SetLongField(thiz, fid, (jlong) -1);//设置成默认是
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_seek(JNIEnv *env, jobject thiz, jint pos) {
+    XLOGI("SEEK %d ", pos);
+}
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_com_joyy_nativecpp_MainActivity_playpos(JNIEnv *env, jobject thiz) {
+    XLOGI("playpos ");
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_play(JNIEnv *env, jobject thiz) {
+    XLOGI("play ");
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_pause(JNIEnv *env, jobject thiz) {
+    XLOGI("pause ");
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_stop(JNIEnv *env, jobject thiz) {
+    XLOGI("stop ");
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url) {
+    // 生成JNI String
+    //    // (2) jstring 转换成 const char * charstr
+    //    const char *charstr = env->GetStringUTFChars(str_, 0);
+    //    XLOGI("[testJString] env->GetStringUTFChars(str_, 0) -> %s ", charstr);
+    //    // (3) 释放 const char *
+    //    env->ReleaseStringUTFChars(str_, charstr);
+    // 得到字符串
+    const char *_url = env->GetStringUTFChars(url, 0);
+    XLOGI("oepn %s", _url);
 }

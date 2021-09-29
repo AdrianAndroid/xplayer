@@ -1,8 +1,11 @@
 package com.joyy.nativecpp;
 
 import android.util.Log;
+import android.util.Printer;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.SeekBar;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -32,6 +35,78 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        initVideo();
+        extracted();
+    }
+
+    private void initVideo() {
+        binding.btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    String url = binding.mEditText.getText().toString();
+                    open(url);
+                    play();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        binding.btnPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pause();
+            }
+        });
+
+        binding.btnStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stop();
+            }
+        });
+
+        binding.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d("XPlay", "progress = " + progress + " , fromUser = " + fromUser);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                Log.d("XPlay", "onStartTrackingTouch seekBar " + seekBar.getMax());
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                Log.d("XPlay", "onStopTrackingTouch seekBar " + seekBar.getMax());
+            }
+        });
+    }
+
+    private long mNativePlayId;
+
+    // 打开url
+    public native void open(String url);
+
+    public native void seek(int pos);
+
+    public native double playpos();
+
+    public native void play();
+
+    public native void pause();
+
+    public native void stop();
+
+
+    public void playCallBack(double pos) {
+
+    }
+
+
+    private void extracted() {
         // Example of a call to a native method
         TextView tv = binding.sampleText;
         tv.setText(stringFromJNI());
@@ -71,9 +146,6 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
-    // 打开url
-    public native void open(String url);
-
 
     // 练习
     public native void testJString(String str);
@@ -106,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //4、JNI对象的全局引用和局部引用
+
     /**
      * 测试JNI强全局引用 和 弱全局引用
      */
@@ -116,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * JNI利用java对象对象进行线程同步
+     *
      * @param lock
      */
     public native void testJNILock(Object lock);
@@ -128,7 +202,8 @@ public class MainActivity extends AppCompatActivity {
      * 2. env->ThrowNew()
      */
     public native void testJavaException();
-    public void helloException(){
+
+    public void helloException() {
         Log.d("XPlay", "\n\n");
         Log.d("XPlay", "helloException");
     }
@@ -139,10 +214,12 @@ public class MainActivity extends AppCompatActivity {
      * 用户保存C++对象的引用
      */
     private long mNativeId;
+
     /**
      * Java对象持有C++对象
      */
     public native void initSDK();
+
     /**
      * Java对象释放C++对象
      */
