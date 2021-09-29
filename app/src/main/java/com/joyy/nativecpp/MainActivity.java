@@ -1,15 +1,20 @@
 package com.joyy.nativecpp;
 
+import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.util.Printer;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.SeekBar;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 
 /**
  * 学习JNI的知识
@@ -39,7 +44,34 @@ public class MainActivity extends AppCompatActivity {
         extracted();
     }
 
+
+    private boolean isPlay = false;
+
     private void initVideo() {
+        binding.mFPlay.setCallback(new FPlay.CallbackImpl() {
+            @Override
+            public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+                super.surfaceCreated(surfaceHolder);
+                initView(surfaceHolder.getSurface());
+            }
+        });
+
+        binding.mFPlay.setRender(new FPlay.RendererImpl() {
+
+        });
+
+        binding.mFPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isPlay = !isPlay;
+                if (isPlay)
+                    play();
+                else
+                    pause();
+            }
+        });
+
+
         binding.btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -81,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 Log.d("XPlay", "onStopTrackingTouch seekBar " + seekBar.getMax());
+                seek((double) seekBar.getProgress() / (double) seekBar.getMax());
             }
         });
     }
@@ -90,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     // 打开url
     public native void open(String url);
 
-    public native void seek(int pos);
+    public native void seek(double pos);
 
     public native double playpos();
 
@@ -146,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
+    public native void initView(Object surface);
 
     // 练习
     public native void testJString(String str);

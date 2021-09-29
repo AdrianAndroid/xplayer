@@ -5,6 +5,7 @@
 #include "IPlayerProxy.h"
 #include "XLog.h"
 #include "Person.h"
+#include "IPlayerProxy.h"
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_joyy_nativecpp_MainActivity_stringFromJNI(
@@ -23,14 +24,14 @@ Java_com_joyy_nativecpp_MainActivity_testJString(JNIEnv *env, jobject thiz, jstr
 
     // (2) jstring 转换成 const char * charstr
     const char *charstr = env->GetStringUTFChars(str_, 0);
-    XLOGI("[testJString] env->GetStringUTFChars(str_, 0) -> %s ", charstr);
+    XLOGI("[native-lib]  [testJString] env->GetStringUTFChars(str_, 0) -> %s ", charstr);
     // (3) 释放 const char *
     env->ReleaseStringUTFChars(str_, charstr);
 
     // (4) 获取字符串子集
     char *subStr = new char;
     env->GetStringUTFRegion(str_, 0, 3, subStr);
-    XLOGI("env->GetStringUTFRegion(str_, 0, 3, subStr) -> %s", subStr);
+    XLOGI("[native-lib] env->GetStringUTFRegion(str_, 0, 3, subStr) -> %s", subStr);
 
     env->ReleaseStringUTFChars(str_, subStr);
 }
@@ -41,10 +42,10 @@ Java_com_joyy_nativecpp_MainActivity_testIntArray(JNIEnv *env, jobject thiz, jin
     // （1）获取数组中元素
     jint *intArray = env->GetIntArrayElements(array_, nullptr);
     int len = env->GetArrayLength(array_); //(2)获取数组长度
-    XLOGI("len:%d", len);
+    XLOGI("[native-lib] len:%d", len);
     for (int i = 0; i < len; i++) {
         jint item = intArray[i];
-        XLOGI("item[%d]:%d", i, item);
+        XLOGI("[native-lib] item[%d]:%d", i, item);
     }
     env->ReleaseIntArrayElements(array_, intArray, 0);
 
@@ -53,7 +54,7 @@ Java_com_joyy_nativecpp_MainActivity_testIntArray(JNIEnv *env, jobject thiz, jin
     env->GetIntArrayRegion(array_, 0, 3, subArray);
     for (int i = 0; i < 3; i++) {
         subArray[i] = subArray[i] + 5;
-        XLOGI("subArrya:[%d]:%d", i, subArray[i]);
+        XLOGI("[native-lib] subArrya:[%d]:%d", i, subArray[i]);
     }
 
     // 用子数组修改原数组元素
@@ -71,7 +72,7 @@ Java_com_joyy_nativecpp_MainActivity_testObjectArray(JNIEnv *env, jobject thiz,
         jstring item = (jstring) env->GetObjectArrayElement(str_arr, i);
 
         const char *charStr = env->GetStringUTFChars(item, 0);
-        XLOGI("strArray item:%s", charStr);
+        XLOGI("[native-lib] strArray item:%s", charStr);
 
         jstring jresult = env->NewStringUTF("HaHa");
         // 设置Object数组元素
@@ -133,7 +134,7 @@ Java_com_joyy_nativecpp_MainActivity_getJavaObjectField(JNIEnv *env, jobject thi
     const char *nickeName = env->GetStringUTFChars(jnickname, 0);
     env->ReleaseStringUTFChars(jnickname, nickeName);
 
-    XLOGI("feifei: name:%s, age:%d, grade:%d, nickname:%s", name, jage, jgrade, nickeName);
+    XLOGI("[native-lib] feifei: name:%s, age:%d, grade:%d, nickname:%s", name, jage, jgrade, nickeName);
 
     // JNI设置java对象属性
     env->SetObjectField(student, nameId, env->NewStringUTF("张三"));
@@ -147,7 +148,7 @@ Java_com_joyy_nativecpp_MainActivity_getJavaObjectField(JNIEnv *env, jobject thi
 
     env->ReleaseStringUTFChars(jnameNew, newName);
     env->ReleaseStringUTFChars(jnickNameNew, newNickName);
-    XLOGI("feifei after update name:%s, age:%d, grade:%d, nickName:%s ", newName, jage, jgrade,
+    XLOGI("[native-lib] feifei after update name:%s, age:%d, grade:%d, nickName:%s ", newName, jage, jgrade,
           newNickName);
 }
 
@@ -182,9 +183,9 @@ Java_com_joyy_nativecpp_MainActivity_testJNIReference(JNIEnv *env, jobject thiz,
     gWeakThiz = env->NewWeakGlobalRef(object);//生成全局的JNI对象引用， 这样生成的全局的JNI对象才可以在其它函数中使用
 
     if (env->IsSameObject(gWeakThiz, nullptr)) {
-        XLOGI("全局引用 已经被释放了");
+        XLOGI("[native-lib] 全局引用 已经被释放了");
     } else {
-        XLOGI("全局引用 还没有被释放");
+        XLOGI("[native-lib] 全局引用 还没有被释放");
     }
     // 释放 全局弱引用对象
     env->DeleteWeakGlobalRef(gWeakThiz);
@@ -195,7 +196,7 @@ Java_com_joyy_nativecpp_MainActivity_testJNILock(JNIEnv *env, jobject thiz, jobj
     // 加锁
     env->MonitorEnter(lock);
     // doSomething
-    XLOGI("feifei, this is in lock");
+    XLOGI("[native-lib] feifei, this is in lock");
     // 释放锁
     env->MonitorExit(lock);
 }
@@ -210,14 +211,14 @@ Java_com_joyy_nativecpp_MainActivity_testJavaException(JNIEnv *env, jobject thiz
     if (env->ExceptionOccurred() != NULL) {
         //env->ExceptionDescribe();
         env->ExceptionClear();
-        XLOGI("feifei, 调用java方法时 遇到了Excpetion");
+        XLOGI("[native-lib] feifei, 调用java方法时 遇到了Excpetion");
         return;
     } else {
-        XLOGI("feifei, 调用java方法时 没有遇到Excpetion");
+        XLOGI("[native-lib] feifei, 调用java方法时 没有遇到Excpetion");
     }
-    XLOGI("feifei, 调用helloException 方法成功了!");
+    XLOGI("[native-lib] feifei, 调用helloException 方法成功了!");
 
-    XLOGI("feifei, now JNI throw java exception - beging");
+    XLOGI("[native-lib] feifei, now JNI throw java exception - beging");
     jclass expectionClazz = env->FindClass("java/lang/Exception");
     if (expectionClazz == NULL) return;
     env->ThrowNew(expectionClazz, "this is a exception");
@@ -251,30 +252,46 @@ Java_com_joyy_nativecpp_MainActivity_releaseSDK(JNIEnv *env, jobject thiz) {
     free(person);
     env->SetLongField(thiz, fid, (jlong) -1);//设置成默认是
 }
+
+
+
+
+
+
+
+
 extern "C"
-JNIEXPORT void JNICALL
-Java_com_joyy_nativecpp_MainActivity_seek(JNIEnv *env, jobject thiz, jint pos) {
-    XLOGI("SEEK %d ", pos);
+JNIEXPORT
+jint JNI_OnLoad(JavaVM *vm, void *res)
+{
+    IPlayerProxy::Get()->Init(vm);
+    return JNI_VERSION_1_4;
 }
+
+
+
 extern "C"
 JNIEXPORT jdouble JNICALL
 Java_com_joyy_nativecpp_MainActivity_playpos(JNIEnv *env, jobject thiz) {
-    XLOGI("playpos ");
+    XLOGI("[native-lib] playpos ");
+    return IPlayerProxy::Get()->PlayPos();
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_play(JNIEnv *env, jobject thiz) {
-    XLOGI("play ");
+    XLOGI("[native-lib] play ");
+    IPlayerProxy::Get()->SetPause(true);
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_pause(JNIEnv *env, jobject thiz) {
-    XLOGI("pause ");
+    XLOGI("[native-lib] pause ");
+    IPlayerProxy::Get()->SetPause(false);
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_stop(JNIEnv *env, jobject thiz) {
-    XLOGI("stop ");
+    XLOGI("[native-lib] stop ");
 }
 extern "C"
 JNIEXPORT void JNICALL
@@ -282,10 +299,25 @@ Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url
     // 生成JNI String
     //    // (2) jstring 转换成 const char * charstr
     //    const char *charstr = env->GetStringUTFChars(str_, 0);
-    //    XLOGI("[testJString] env->GetStringUTFChars(str_, 0) -> %s ", charstr);
+    //    XLOGI("[native-lib] [testJString] env->GetStringUTFChars(str_, 0) -> %s ", charstr);
     //    // (3) 释放 const char *
     //    env->ReleaseStringUTFChars(str_, charstr);
     // 得到字符串
     const char *_url = env->GetStringUTFChars(url, 0);
-    XLOGI("oepn %s", _url);
+    XLOGI("[native-lib] oepn %s", _url);
+    IPlayerProxy::Get()->Open(_url);
+    IPlayerProxy::Get()->Start();
+
+    env->ReleaseStringUTFChars(url, _url);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_initView(JNIEnv *env, jobject thiz, jobject surface) {
+    ANativeWindow  *win = ANativeWindow_fromSurface(env, surface);
+    IPlayerProxy::Get()->InitView(win);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_seek(JNIEnv *env, jobject thiz, jdouble pos) {
+    XLOGI("[native-lib] SEEK %f ", pos);
 }

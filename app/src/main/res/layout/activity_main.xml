@@ -23,7 +23,8 @@
         android:background="#cde6c7"
         android:orientation="vertical">
 
-        <View
+        <com.joyy.nativecpp.FPlay
+            android:id="@+id/mFPlay"
             android:layout_width="match_parent"
             android:layout_height="250dp"
             android:background="@color/cardview_dark_background" />
@@ -32,8 +33,7 @@
             android:id="@+id/mEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="/sdcard/1080.mp4"
-            />
+            android:text="/sdcard/1080.mp4" />
 
         <androidx.appcompat.widget.AppCompatSeekBar
             android:id="@+id/mSeekBar"
