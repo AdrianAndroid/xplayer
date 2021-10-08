@@ -6,6 +6,11 @@
 #include "XLog.h"
 #include "Person.h"
 
+// 测试用
+#include <jni.h>
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_joyy_nativecpp_MainActivity_stringFromJNI(
         JNIEnv *env,
@@ -133,7 +138,8 @@ Java_com_joyy_nativecpp_MainActivity_getJavaObjectField(JNIEnv *env, jobject thi
     const char *nickeName = env->GetStringUTFChars(jnickname, 0);
     env->ReleaseStringUTFChars(jnickname, nickeName);
 
-    XLOGI("[native-lib] feifei: name:%s, age:%d, grade:%d, nickname:%s", name, jage, jgrade, nickeName);
+    XLOGI("[native-lib] feifei: name:%s, age:%d, grade:%d, nickname:%s", name, jage, jgrade,
+          nickeName);
 
     // JNI设置java对象属性
     env->SetObjectField(student, nameId, env->NewStringUTF("张三"));
@@ -147,7 +153,8 @@ Java_com_joyy_nativecpp_MainActivity_getJavaObjectField(JNIEnv *env, jobject thi
 
     env->ReleaseStringUTFChars(jnameNew, newName);
     env->ReleaseStringUTFChars(jnickNameNew, newNickName);
-    XLOGI("[native-lib] feifei after update name:%s, age:%d, grade:%d, nickName:%s ", newName, jage, jgrade,
+    XLOGI("[native-lib] feifei after update name:%s, age:%d, grade:%d, nickName:%s ", newName, jage,
+          jgrade,
           newNickName);
 }
 
@@ -261,16 +268,15 @@ Java_com_joyy_nativecpp_MainActivity_releaseSDK(JNIEnv *env, jobject thiz) {
 
 extern "C"
 JNIEXPORT
-jint JNI_OnLoad(JavaVM* vm, void* reserved){
+jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     XLOGI("JNI_OnLoad");
     IPlayerProxy::Get()->Init(vm);
     return JNI_VERSION_1_4;
 }
 
-JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved){
+JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
     XLOGI("JNI_OnUnload");
 }
-
 
 
 extern "C"
@@ -317,11 +323,204 @@ Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_initView(JNIEnv *env, jobject thiz, jobject surface) {
-    ANativeWindow  *win = ANativeWindow_fromSurface(env, surface);
+    ANativeWindow *win = ANativeWindow_fromSurface(env, surface);
     IPlayerProxy::Get()->InitView(win);
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_seek(JNIEnv *env, jobject thiz, jdouble pos) {
     XLOGI("[native-lib] SEEK %f ", pos);
+}
+
+
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// 测试音频
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+// 1. 创建引擎
+static SLObjectItf engineSL = NULL;
+
+SLEngineItf CreateSL() {
+    SLresult re;
+    SLEngineItf en;
+    re = slCreateEngine(&engineSL, 0, 0, 0, 0, 0);
+    XLOGI("slCreateEngine success!!");
+    if (re != SL_RESULT_SUCCESS) return NULL;
+    re = (*engineSL)->Realize(engineSL, SL_BOOLEAN_FALSE);
+    XLOGI("(*engineSL)->Realize success!!");
+    if (re != SL_RESULT_SUCCESS) return NULL;
+    re = (*engineSL)->GetInterface(engineSL, SL_IID_ENGINE, &en);
+    XLOGI("(*engineSL)->GetInterface success!!");
+    if (re != SL_RESULT_SUCCESS) return NULL;
+    return en;
+}
+
+void PcmCall(SLAndroidSimpleBufferQueueItf bf, void *context) {
+    XLOGI("PcmCall");
+    static FILE *fp = NULL;
+    static char *buf = NULL;
+    if (!buf) buf = new char[1024 * 1024];
+    const char *url = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.pcm";
+    //r     以只读方式打开文件，该文件必须存在。
+    //r+    以读/写方式打开文件，该文件必须存在。
+    //rb+   以读/写方式打开一个二进制文件，只允许读/写数据。
+    //rt+   以读/写方式打开一个文本文件，允许读和写。
+    //w     打开只写文件，若文件存在则文件长度清为零，即该文件内容会消失；若文件不存在则创建该文件。
+    //w+    打开可读/写文件，若文件存在则文件长度清为零，即该文件内容会消失；若文件不存在则创建该文件。
+    //a     以附加的方式打开只写文件。若文件不存在，则会创建该文件；如果文件存在，则写入的数据会被加到文件尾后，即文件原先的内容会被保留（EOF 符保留）。
+    //a+    以附加方式打开可读/写的文件。若文件不存在，则会创建该文件，如果文件存在，则写入的数据会被加到文件尾后，即文件原先的内容会被保留（EOF符不保留）。
+    //wb    以只写方式打开或新建一个二进制文件，只允许写数据。
+    //wb+   以读/写方式打开或新建一个二进制文件，允许读和写。
+    //wt+   以读/写方式打开或新建一个文本文件，允许读和写。
+    //at+   以读/写方式打开一个文本文件，允许读或在文本末追加数据。
+    //ab+   以读/写方式打开一个二进制文件，允许读或在文件末追加数据。
+    fp = fopen(url, "rb+");
+    if (!fp) {
+        XLOGE("open %s failed!", url);
+        return;
+    } else {
+        XLOGI("open %s success!", url);
+    }
+    if (feof(fp) == 0) {
+        XLOGE("feof(fp) == 0");
+        int len = fread(buf, 1, 1024, fp);
+        if (len > 0) (*bf)->Enqueue(bf, buf, len);
+    } else {
+        XLOGE("feof(fp) != 0");
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstring url) {
+    // 得到字符串
+//    const char *_url = env->GetStringUTFChars(url, 0);
+//    XLOGI("[native-lib] testAudio url = %s", _url);
+//    env->ReleaseStringUTFChars(url, _url);
+
+    // 测试打开文件
+    const char *m_url = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.pcm";
+    FILE *fp = fopen(m_url, "rb");
+    if (fp) {
+        XLOGI("test %s file open success ", m_url);
+        fclose(fp);
+    } else {
+        XLOGE("test %s file open failed! with %d , %s", m_url, errno, strerror(errno));
+    }
+
+
+    // 1. 创建引擎
+    SLEngineItf eng = CreateSL();
+    if (eng) {
+        XLOGI("CreateSL success!");
+    } else {
+        XLOGE("CreateSL failed!");
+    }
+
+    // 2. 创建混音器
+    SLObjectItf mix = NULL;
+    SLresult re = 0;
+    re = (*eng)->CreateOutputMix(eng, &mix, 0, 0, 0);
+    if (re != SL_RESULT_SUCCESS) {
+        XLOGE("(*eng)->CreateOutputMix failed!");
+    } else {
+        XLOGI("(*eng)->CreateOutputMix success!");
+    }
+    re = (*mix)->Realize(mix, SL_BOOLEAN_FALSE);
+    if (re != SL_RESULT_SUCCESS) {
+        XLOGE("(*mix)->Realize failed!");
+    } else {
+        XLOGI("(*mix)->Realize success!");
+    }
+    SLDataLocator_OutputMix outmix = {SL_DATALOCATOR_OUTPUTMIX, mix};
+    SLDataSink audioSink = {&outmix, 0};
+
+    // 3. 配置音频信息
+    // 缓冲队列
+    SLDataLocator_AndroidSimpleBufferQueue que = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 10};
+    // 音频格式
+    SLDataFormat_PCM pcm = {
+            SL_DATAFORMAT_PCM,
+            2, //声道数
+            SL_SAMPLINGRATE_44_1,
+            SL_PCMSAMPLEFORMAT_FIXED_16,
+            SL_PCMSAMPLEFORMAT_FIXED_16,
+            SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
+            SL_BYTEORDER_LITTLEENDIAN //字节序，
+    };
+    SLDataSource ds = {&que, &pcm};
+
+    // 4. 创建播放器
+    SLObjectItf player = NULL;
+    SLPlayItf iplayer = NULL;
+    SLAndroidSimpleBufferQueueItf pcmQue = NULL;
+    const SLInterfaceID ids[] = {SL_IID_BUFFERQUEUE};
+    const SLboolean req[] = {SL_BOOLEAN_TRUE};
+    re = (*eng)->CreateAudioPlayer(eng, &player, &ds, &audioSink,
+                                   sizeof(ids) / sizeof(SLInterfaceID), ids, req);
+    if (re != SL_RESULT_SUCCESS) {
+        XLOGE("(*eng)->CreateAudioPlayer failed!");
+    } else {
+        XLOGI("(*eng)->CreateAudioPlayer success!");
+    }
+    (*player)->Realize(player, SL_BOOLEAN_FALSE);
+    //获取player接口
+    if (re != SL_RESULT_SUCCESS) {
+        XLOGE("(*eng)->Realize failed!");
+    } else {
+        XLOGI("(*eng)->Realize success!");
+    }
+    // 获取player接口
+    re = (*player)->GetInterface(player, SL_IID_PLAY, &iplayer);
+    if (re != SL_RESULT_SUCCESS) {
+        XLOGE("(*eng)->GetInterface SL_IID_PLAY failed!");
+    } else {
+        XLOGI("(*eng)->GetInterface SL_IID_PLAY success!");
+    }
+    re = (*player)->GetInterface(player, SL_IID_BUFFERQUEUE, &pcmQue);
+    if (re != SL_RESULT_SUCCESS) {
+        XLOGE("(*eng)->GetInterface SL_IID_BUFFERQUEUE failed!");
+    } else {
+        XLOGI("(*eng)->GetInterface SL_IID_BUFFERQUEUE success!");
+    }
+
+    if (!pcmQue) {
+        XLOGE("pcmQue 队列 failed!");
+    } else {
+        XLOGI("pcmQue 队列 success!");
+    }
+
+    if (!iplayer) {
+        XLOGE("iplayer  failed!");
+    } else {
+        XLOGI("iplayer  success!");
+    }
+
+    // 设置回调函数， 播放队列空调用
+    (*pcmQue)->RegisterCallback(pcmQue, PcmCall, 0);
+
+    //启动播放状态
+    (*iplayer)->SetPlayState(iplayer, SL_PLAYSTATE_PLAYING);
+
+    // 启动队列回调
+    (*pcmQue)->Enqueue(pcmQue, "", 1);
+}
+
+
+
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// 测试视频
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_testVideo(JNIEnv *env, jobject thiz, jstring url) {
+    const char *_url = env->GetStringUTFChars(url, 0);
+    XLOGI("[native-lib] testVideo url = %s", _url);
+    env->ReleaseStringUTFChars(url, _url);
 }

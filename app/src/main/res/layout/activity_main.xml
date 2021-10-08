@@ -84,7 +84,7 @@
 
             <View
                 android:layout_width="10dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="10dp" />
 
             <Button
                 android:id="@+id/btnPause"
@@ -94,7 +94,7 @@
 
             <View
                 android:layout_width="10dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="10dp" />
 
             <Button
                 android:id="@+id/btnStop"
@@ -102,6 +102,28 @@
                 android:layout_height="wrap_content"
                 android:text="退出" />
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/testAudio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="测试音频" />
+
+            <View
+                android:layout_width="10dp"
+                android:layout_height="10dp" />
+
+            <Button
+                android:id="@+id/testVideo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="测试视频" />
         </LinearLayout>
 
     </LinearLayout>

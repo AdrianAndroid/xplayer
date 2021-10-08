@@ -1,6 +1,7 @@
 package com.joyy.nativecpp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -13,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
+import java.io.File;
 
 /**
  * 学习JNI的知识
@@ -49,9 +51,31 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
 
-
         initVideo();
 //        extracted();
+
+        initTest();
+
+        File file = new File(getExternalCacheDir(), "hello");
+        file.mkdirs();
+    }
+
+    private void initTest() {
+        findViewById(R.id.testAudio).setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("SdCardPath")
+            @Override
+            public void onClick(View view) {
+                testAudio("/sdcard/audio.pcm");
+            }
+        });
+
+        findViewById(R.id.testVideo).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                testVideo(binding.etLocal.getText().toString());
+            }
+        });
     }
 
 
@@ -141,6 +165,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private long mNativePlayId;
+
+    public native void testAudio(String url);
+
+    public native void testVideo(String url);
+
 
     // 打开url
     public native void open(String url);

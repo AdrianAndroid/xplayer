@@ -13,7 +13,15 @@ static double r2d(AVRational r) {
     return r.num == 0 || r.den == 0 ? 0. : (double) r.num / (double) r.den;
 }
 
-
+/**
+ * 作用：
+ * 1. avformat_open_input
+ * 2. avformat_find_stream_info
+ * 3. GetVPara
+ * 4. GetAPara
+ * @param url 路径
+ * @return true is suceess
+ */
 bool FFDemux::Open(const char *url) {
     XLOGI("FFDemux::Open file %s begin", url);
     Close();
@@ -34,6 +42,8 @@ bool FFDemux::Open(const char *url) {
         char buf[1024] = {0};
         av_strerror(re, buf, sizeof(buf));
         XLOGE("avformat_find_stream_info %s failed!", url);
+    } else {
+        XLOGI("avformat_find_stream_info %s success!", url);
     }
     this->totalMs = ic->duration / (AV_TIME_BASE / 100);
     mux.unlock();
@@ -129,6 +139,12 @@ XParameter FFDemux::GetAPara() {
     return para;
 }
 
+/**
+ * 作用
+ * 1。av_packet_alloc
+ * 2。av_read_frame
+ * @return
+ */
 XData FFDemux::Read() {
     mux.lock();
     if (!ic) {
@@ -136,7 +152,7 @@ XData FFDemux::Read() {
         XLOGE("XData FFDemux::Read() ic is null");
         return XData();
     } else {
-        XLOGE("XData FFDemux::Read() ic is not null");
+        XLOGI("XData FFDemux::Read() ic is not null");
     }
 
     XData d;
@@ -145,10 +161,10 @@ XData FFDemux::Read() {
     if (re != 0) {
         mux.unlock();
         av_packet_free(&pkt);
-        XLOGE("XData FFDemux::Read() av_packet_free failed!");
+        XLOGE("XData FFDemux::Read() av_read_frame failed!");
         return XData();
     } else {
-        XLOGE("XData FFDemux::Read() av_packet_free success!");
+        XLOGI("XData FFDemux::Read() av_read_frame success!");
     }
     d.data = (unsigned char *) pkt;
     d.size = pkt->size;
