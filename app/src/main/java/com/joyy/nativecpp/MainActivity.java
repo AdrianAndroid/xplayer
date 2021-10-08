@@ -1,20 +1,18 @@
 package com.joyy.nativecpp;
 
-import android.opengl.GLSurfaceView;
+import android.Manifest;
+import android.os.Bundle;
 import android.util.Log;
-import android.util.Printer;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
-import android.widget.TextView;
+import androidx.core.app.ActivityCompat;
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * 学习JNI的知识
@@ -24,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     // Used to load the 'nativecpp' library on application startup.
     // 使用本地库
     static {
+        Log.i("XPlay", " System.loadLibrary(\"nativecpp\");");
         System.loadLibrary("nativecpp");
     }
 
@@ -40,8 +39,19 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+        ActivityCompat.requestPermissions(this,
+                new String[]{
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                }
+                , 100);
+//        }
+
+
+
         initVideo();
-        extracted();
+//        extracted();
     }
 
 
@@ -72,12 +82,24 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        binding.btnOpenLocal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                open(binding.etLocal.getText().toString());
+            }
+        });
+
+        binding.btnOpenRTMP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                open(binding.etRTMP.getText().toString());
+            }
+        });
+
         binding.btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    String url = binding.mEditText.getText().toString();
-                    open(url);
                     play();
                 } catch (Exception e) {
                     e.printStackTrace();

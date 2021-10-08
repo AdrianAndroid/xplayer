@@ -5,7 +5,6 @@
 #include "IPlayerProxy.h"
 #include "XLog.h"
 #include "Person.h"
-#include "IPlayerProxy.h"
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_joyy_nativecpp_MainActivity_stringFromJNI(
@@ -262,10 +261,14 @@ Java_com_joyy_nativecpp_MainActivity_releaseSDK(JNIEnv *env, jobject thiz) {
 
 extern "C"
 JNIEXPORT
-jint JNI_OnLoad(JavaVM *vm, void *res)
-{
+jint JNI_OnLoad(JavaVM* vm, void* reserved){
+    XLOGI("JNI_OnLoad");
     IPlayerProxy::Get()->Init(vm);
     return JNI_VERSION_1_4;
+}
+
+JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved){
+    XLOGI("JNI_OnUnload");
 }
 
 
@@ -306,7 +309,8 @@ Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url
     const char *_url = env->GetStringUTFChars(url, 0);
     XLOGI("[native-lib] oepn %s", _url);
     IPlayerProxy::Get()->Open(_url);
-    IPlayerProxy::Get()->Start();
+    XLOGI("[native-lib] Start %s", _url);
+    //IPlayerProxy::Get()->Start();
 
     env->ReleaseStringUTFChars(url, _url);
 }

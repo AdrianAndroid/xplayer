@@ -21,11 +21,19 @@ android {
                 abiFilters "armeabi-v7a"
             }
         }
-        sourceSets{
-            main{
-                jniLibs.srcDirs=['libs']
-            }
+        packagingOptions {
+            pickFirst 'lib/armeabi-v7a/libavcodec.so'
+            pickFirst 'lib/armeabi-v7a/libavfilter.so'
+            pickFirst 'lib/armeabi-v7a/libavformat.so'
+            pickFirst 'lib/armeabi-v7a/libavutil.so'
+            pickFirst 'lib/armeabi-v7a/libswresample.so'
+            pickFirst 'lib/armeabi-v7a/libswscale.so'
         }
+//        sourceSets{
+//            main{
+//                jniLibs.srcDirs=['libs']
+//            }
+//        }
     }
 
     buildTypes {
