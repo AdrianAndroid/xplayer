@@ -10,7 +10,7 @@ bool IPlayerProxy::Open(const char *path) {
     XLOGI("[IPlayerProxy] IPlayerProxy::Open %s  player=%p", path, player);
     bool re = false;
     mux.lock();
-    if(player) {
+    if (player) {
         player->isHardDecode = isHardDecode;
         XLOGI("IPlayerProxy::Open player is not null player=%p", &player);
         re = player->Open(path);
@@ -34,7 +34,11 @@ void IPlayerProxy::Close() {
 
 bool IPlayerProxy::Start() {
     XLOGI("[IPlayerProxy] IPlayerProxy::Start");
-    return IPlayer::Start();
+    bool re = false;
+    mux.lock();
+    if (player) re = player->Start();
+    mux.unlock();
+    return re;
 }
 
 void IPlayerProxy::InitView(void *win) {
@@ -60,10 +64,10 @@ double IPlayerProxy::PlayPos() {
 void IPlayerProxy::Init(void *vm) {
     XLOGI("[IPlayerProxy] IPlayerProxy::Init");
     mux.lock();
-    if(vm) {
-         FFPlayerBuilder::InitHard(vm);
+    if (vm) {
+        FFPlayerBuilder::InitHard(vm);
     }
-    if(!player) {
+    if (!player) {
         XLOGI("IPlayerProxy::Init FFPlayerBuilder::Get()->BuilderPlayer()");
         player = FFPlayerBuilder::Get()->BuilderPlayer();
         XLOGI("IPlayerProxy::Init player=%p", &player);

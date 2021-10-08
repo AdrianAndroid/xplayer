@@ -130,7 +130,45 @@ XParameter FFDemux::GetAPara() {
 }
 
 XData FFDemux::Read() {
-    return XData();
+    mux.lock();
+    if (!ic) {
+        mux.unlock();
+        XLOGE("XData FFDemux::Read() ic is null");
+        return XData();
+    } else {
+        XLOGE("XData FFDemux::Read() ic is not null");
+    }
+
+    XData d;
+    AVPacket *pkt = av_packet_alloc();
+    int re = av_read_frame(ic, pkt);
+    if (re != 0) {
+        mux.unlock();
+        av_packet_free(&pkt);
+        XLOGE("XData FFDemux::Read() av_packet_free failed!");
+        return XData();
+    } else {
+        XLOGE("XData FFDemux::Read() av_packet_free success!");
+    }
+    d.data = (unsigned char *) pkt;
+    d.size = pkt->size;
+    if (pkt->stream_index == audioStream) {
+        d.isAudio = true;
+    } else if (pkt->stream_index == videoStream) {
+        d.isAudio = false;
+    } else {
+        mux.unlock();
+        av_packet_free(&pkt);
+        XLOGE("pkt->stream_index 不是audioStream 也不是 videoStream");
+        return XData();
+    }
+
+    // 转换pts
+    pkt->pts = pkt->pts * (1000 * r2d(ic->streams[pkt->stream_index]->time_base));
+    pkt->dts = pkt->dts * (1000 * r2d(ic->streams[pkt->stream_index]->time_base));
+    d.pts = (int) pkt->pts;
+    mux.unlock();
+    return d;
 }
 
 FFDemux::FFDemux() {

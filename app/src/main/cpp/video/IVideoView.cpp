@@ -3,3 +3,8 @@
 //
 
 #include "IVideoView.h"
+
+void IVideoView::Update(XData data) {
+    //IObserver::Update(data);
+    this->Render(data);
+}

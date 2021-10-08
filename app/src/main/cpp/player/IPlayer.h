@@ -15,7 +15,7 @@ class IVideoView;
 class IResample;
 class IDecode;
 
-class IPlayer {
+class IPlayer : public XThread{
 public:
     static IPlayer *Get(unsigned char index = 0);
 

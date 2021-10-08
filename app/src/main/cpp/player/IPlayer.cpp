@@ -4,7 +4,12 @@
 
 #include "IPlayer.h"
 #include "../XLog.h"
+#include "../video/IVideoView.h"
+#include "../resample/IResample.h"
+#include "../audio/IAudioPlay.h"
 #include "../demux/IDemux.h"
+#include "../decode/IDecode.h"
+
 
 IPlayer *IPlayer::Get(unsigned char index) {
     XLOGI("IPlayer *IPlayer::Get index=%d", index);
@@ -19,7 +24,7 @@ bool IPlayer::Open(const char *path) {
     XLOGI("IPlayer::Open 解封装");
     XLOGI("IPlayer::Open dexmux=%p", &demux);
     // 解封装
-    if(!demux || !demux->Open(path)){
+    if (!demux || !demux->Open(path)) {
         mux.unlock();
         XLOGE("demux->Open %s failed! ! demux is null or demux->Open not ok!", path);
         return false;
@@ -34,24 +39,113 @@ bool IPlayer::Open(const char *path) {
 
 void IPlayer::Close() {
     XLOGI("[IPlayer] Close");
+    // 2 先关闭主体线程， 再清理观察者
+    // 同步线程
+    XThread::Stop();
+    // 解封装
+    if (demux) demux->Stop();
+    // 解码
+    if (vdecode) vdecode->Stop();
+    if (adecode) adecode->Stop();
+    if (audioPlay) audioPlay->Stop();
+
+    // 2. 清理缓冲队列
+    if (vdecode) vdecode->Clear();
+    if (adecode) adecode->Clear();
+    if (audioPlay) audioPlay->Clear();
+
+
+    // 3。清理资源
+    if (audioPlay) audioPlay->Close();
+    if (videoView) videoView->Close();
+    if (vdecode) vdecode->Close();
+    if (adecode) adecode->Close();
+    if (demux) demux->Close();
+    mux.unlock();
 }
 
 bool IPlayer::Start() {
     XLOGI("[IPlayer] Start");
+    mux.lock();
+
+    if (vdecode) vdecode->Start();
+    if (!demux || !demux->Start()) {
+        mux.unlock();
+        XLOGE("demux->Start failed!");
+        return false;
+    }
+    if (adecode) adecode->Start();
+    if (audioPlay) audioPlay->StartPlay(outPara);
+    XThread::Start();
+
+    mux.unlock();
     return false;
 }
 
 void IPlayer::InitView(void *win) {
     XLOGI("[IPlayer] InitView");
+    if (videoView) {
+        videoView->Close();
+        videoView->SetRender(win);
+    }
 }
 
 double IPlayer::PlayPos() {
     XLOGI("[IPlayer] PlayPos");
-    return 0;
+    double pos = 0.0;
+    mux.lock();
+    int total = 0;
+    if (demux) total = demux->totalMs; // 解封装的时候得到的
+    if (total > 0) {
+        if (vdecode) pos = (double) vdecode->pts / (double) total;
+    }
+    mux.unlock();
+    return pos;
 }
 
 bool IPlayer::Seek(double pos) {
     XLOGI("[IPlayer] Seek pos=%f", pos);
+    bool re = false;
+    if (!demux) return false;
+    // 暂停所有线程
+    SetPause(true);
+    mux.lock();
+    // 清理缓冲
+    // 2. 清理缓冲队列
+    if (vdecode) vdecode->Clear(); //清理缓冲队列，清理ffmpeg的缓冲
+    if (adecode) adecode->Clear();
+    if (audioPlay) audioPlay->Clear();
+
+    re = demux->Seek(pos); //seek跳转到关键帧
+    if (!vdecode) {
+        mux.unlock();
+        setPause(false);
+        return re;
+    }
+    //解码到实际需要显示的帧
+    int seekPts = pos * demux->totalMs;
+    while (!isExit) {
+        XData pkt = demux->Read();
+        if (pkt.size <= 0) break;
+        if (pkt.isAudio) {
+            if (pkt.pts < seekPts) {
+                pkt.Drop();
+                continue;
+            }
+            //写入缓冲队列
+            demux->Notify(pkt);
+            continue;
+        }
+
+        // 解码需要显示的帧之前的数据
+        vdecode->SendPacket(pkt);
+        pkt.Drop();
+        XData data = vdecode->RecvFrame();
+        if (data.size <= 0) continue;
+        if (data.pts >= seekPts) break;
+    }
+    mux.unlock();
+    setPause(false);
     return false;
 }
 
@@ -61,8 +155,30 @@ void IPlayer::SetPause(bool isP) {
     } else {
         XLOGI("[IPlayer] Seek SetPause false");
     }
+    mux.lock();
+    XThread::setPause(isP);
+//    if(demux) demux->SetPause(isP);
+//    if(vdecode) vdecode->SetPause(isP);
+//    if(adecode) adecode->SetPause(isP);
+//    if(audioPlay) audioPlay->SetPause(isP);
+    mux.unlock();
 }
 
 void IPlayer::Main() {
+    while (!isExit) {
+        mux.lock();
+        if (!audioPlay || !vdecode) {
+            mux.unlock();
+            XSleep(2);
+            continue;
+        }
 
+        // 同步
+        // 获取音频的pts 告诉视频
+        int apts = audioPlay->pts;
+        vdecode->synPts = apts;
+
+        mux.unlock();
+        XSleep(2);
+    }
 }

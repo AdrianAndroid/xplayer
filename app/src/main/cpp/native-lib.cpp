@@ -308,9 +308,9 @@ Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url
     // 得到字符串
     const char *_url = env->GetStringUTFChars(url, 0);
     XLOGI("[native-lib] oepn %s", _url);
-    IPlayerProxy::Get()->Open(_url);
+    IPlayerProxy::Get()->Open(_url); // 打开文件，并解码
     XLOGI("[native-lib] Start %s", _url);
-    //IPlayerProxy::Get()->Start();
+    IPlayerProxy::Get()->Start();
 
     env->ReleaseStringUTFChars(url, _url);
 }
