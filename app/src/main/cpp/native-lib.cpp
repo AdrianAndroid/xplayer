@@ -377,12 +377,14 @@ void PcmCall(SLAndroidSimpleBufferQueueItf bf, void *context) {
     //wt+   以读/写方式打开或新建一个文本文件，允许读和写。
     //at+   以读/写方式打开一个文本文件，允许读或在文本末追加数据。
     //ab+   以读/写方式打开一个二进制文件，允许读或在文件末追加数据。
-    fp = fopen(url, "rb+");
     if (!fp) {
-        XLOGE("open %s failed!", url);
-        return;
-    } else {
-        XLOGI("open %s success!", url);
+        fp = fopen(url, "rb+");
+        if (!fp) {
+            XLOGE("open %s failed!", url);
+            return;
+        } else {
+            XLOGI("open %s success!", url);
+        }
     }
     if (feof(fp) == 0) {
         XLOGE("feof(fp) == 0");
@@ -411,13 +413,13 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
         XLOGE("test %s file open failed! with %d , %s", m_url, errno, strerror(errno));
     }
 
-
     // 1. 创建引擎
     SLEngineItf eng = CreateSL();
     if (eng) {
         XLOGI("CreateSL success!");
     } else {
         XLOGE("CreateSL failed!");
+        return;
     }
 
     // 2. 创建混音器
@@ -426,12 +428,14 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     re = (*eng)->CreateOutputMix(eng, &mix, 0, 0, 0);
     if (re != SL_RESULT_SUCCESS) {
         XLOGE("(*eng)->CreateOutputMix failed!");
+        return;
     } else {
         XLOGI("(*eng)->CreateOutputMix success!");
     }
     re = (*mix)->Realize(mix, SL_BOOLEAN_FALSE);
     if (re != SL_RESULT_SUCCESS) {
         XLOGE("(*mix)->Realize failed!");
+        return;
     } else {
         XLOGI("(*mix)->Realize success!");
     }
@@ -445,7 +449,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     SLDataFormat_PCM pcm = {
             SL_DATAFORMAT_PCM,
             2, //声道数
-            SL_SAMPLINGRATE_44_1,
+            SL_SAMPLINGRATE_16,
             SL_PCMSAMPLEFORMAT_FIXED_16,
             SL_PCMSAMPLEFORMAT_FIXED_16,
             SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
