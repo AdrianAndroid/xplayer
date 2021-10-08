@@ -2,7 +2,7 @@
 #include <string>
 #include <android/native_window_jni.h>
 
-#include "IPlayerProxy.h"
+#include "player/IPlayerProxy.h"
 #include "XLog.h"
 #include "Person.h"
 

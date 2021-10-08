@@ -3,8 +3,8 @@
 //
 
 #include "IPlayer.h"
-#include "XLog.h"
-#include "demux/IDemux.h"
+#include "../XLog.h"
+#include "../demux/IDemux.h"
 
 IPlayer *IPlayer::Get(unsigned char index) {
     XLOGI("IPlayer *IPlayer::Get index=%d", index);

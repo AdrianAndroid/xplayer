@@ -3,8 +3,8 @@
 //
 
 #include "FFPlayerBuilder.h"
-#include "demux/FFDemux.h"
-#include "XLog.h"
+#include "../demux/FFDemux.h"
+#include "../XLog.h"
 
 void FFPlayerBuilder::InitHard(void *vm) {
     XLOGI("FFPlayerBuilder::InitHard(void *vm)");

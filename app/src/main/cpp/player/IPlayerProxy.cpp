@@ -4,7 +4,7 @@
 
 #include "IPlayerProxy.h"
 #include "FFPlayerBuilder.h"
-#include "XLog.h"
+#include "../XLog.h"
 
 bool IPlayerProxy::Open(const char *path) {
     XLOGI("[IPlayerProxy] IPlayerProxy::Open %s  player=%p", path, player);

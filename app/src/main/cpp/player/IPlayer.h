@@ -5,8 +5,8 @@
 #ifndef NATIVECPP_IPLAYER_H
 #define NATIVECPP_IPLAYER_H
 #include <mutex>
-#include "XThread.h"
-#include "XParameter.h"
+#include "../XThread.h"
+#include "../XParameter.h"
 
 
 class IDemux;

@@ -3,7 +3,7 @@
 //
 
 #include "IPlayerBuilder.h"
-#include "XLog.h"
+#include "../XLog.h"
 
 IPlayer *IPlayerBuilder::BuilderPlayer(unsigned char index) {
     XLOGI("IPlayerBuilder::BuilderPlayer");

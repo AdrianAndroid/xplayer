@@ -43,10 +43,10 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        FFPlayerBuilder.cpp
-        IPlayer.cpp
-        IPlayerBuilder.cpp
-        IPlayerProxy.cpp
+        player/FFPlayerBuilder.cpp
+        player/IPlayer.cpp
+        player/IPlayerBuilder.cpp
+        player/IPlayerProxy.cpp
 
         demux/IDemux.cpp
         demux/FFDemux.cpp
