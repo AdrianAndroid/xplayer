@@ -5,8 +5,9 @@
 #ifndef NATIVECPP_IVIDEOVIEW_H
 #define NATIVECPP_IVIDEOVIEW_H
 
+#include "../IObserver.h"
 
-class IVideoView {
+class IVideoView : public IObserver {
 
 };
 

@@ -5,8 +5,9 @@
 #ifndef NATIVECPP_IAUDIOPLAY_H
 #define NATIVECPP_IAUDIOPLAY_H
 
+#include "../IObserver.h"
 
-class IAudioPlay {
+class IAudioPlay : public IObserver{
 
 };
 

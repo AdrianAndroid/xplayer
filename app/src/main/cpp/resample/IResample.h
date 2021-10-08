@@ -6,8 +6,9 @@
 #define NATIVECPP_IRESAMPLE_H
 
 
-class IResample {
+#include "../IObserver.h"
 
+class IResample : public IObserver{
 };
 
 

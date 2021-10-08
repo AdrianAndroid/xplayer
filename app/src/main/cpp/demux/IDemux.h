@@ -10,7 +10,7 @@
 #include "../IObserver.h"
 #include "../XParameter.h"
 
-class IDemux : IObserver{
+class IDemux : public IObserver{
 public:
     // 打开文件，或者流媒体 rmtp http rtsp
     virtual bool Open(const char *url) = 0;
