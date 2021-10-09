@@ -76,7 +76,60 @@ public class MainActivity extends AppCompatActivity {
                 testVideo(binding.etLocal.getText().toString());
             }
         });
+        findViewById(R.id.test027).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test027();// 通过遍历获取AVStream音视频流信息并打印参数
+            }
+        });
+        findViewById(R.id.test032).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test032();// av_read_frame和av_seek_frame
+            }
+        });
+        findViewById(R.id.test033).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test033();// av_read_frame和av_seek_frame
+            }
+        });
+        findViewById(R.id.test034).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test034();// av_read_frame和av_seek_frame
+            }
+        });
+        findViewById(R.id.test037).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test037();// av_read_frame和av_seek_frame
+            }
+        });
+        findViewById(R.id.test039).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test039();// av_read_frame和av_seek_frame
+            }
+        });
     }
+
+    public native void test027();
+
+    // av_read_frame和av_seek_frame
+    public native void test032();
+
+    // AVCodecContext解码上下文初始化
+    public native void test033();
+
+    //打开音频解码器上下文
+    public native void test034();
+
+    //完成音视频解码
+    public native void test037();
+
+    //ffmpeg调用MediaCodec实现硬解码代码演示
+    public native void test039();
 
 
     private boolean isPlay = false;

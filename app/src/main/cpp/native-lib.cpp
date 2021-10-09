@@ -11,6 +11,16 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/jni.h>
+}
+
+#include <iostream>
+
+using namespace std;
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_joyy_nativecpp_MainActivity_stringFromJNI(
         JNIEnv *env,
@@ -270,6 +280,7 @@ extern "C"
 JNIEXPORT
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     XLOGI("JNI_OnLoad");
+    av_jni_set_java_vm(vm, 0);
     IPlayerProxy::Get()->Init(vm);
     return JNI_VERSION_1_4;
 }
@@ -393,6 +404,7 @@ void PcmCall(SLAndroidSimpleBufferQueueItf bf, void *context) {
     } else {
         XLOGE("feof(fp) != 0");
     }
+    XSleep(50);
 }
 
 extern "C"
@@ -527,4 +539,711 @@ Java_com_joyy_nativecpp_MainActivity_testVideo(JNIEnv *env, jobject thiz, jstrin
     const char *_url = env->GetStringUTFChars(url, 0);
     XLOGI("[native-lib] testVideo url = %s", _url);
     env->ReleaseStringUTFChars(url, _url);
+}
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// 通过遍历获取AVStream音视频流信息并打印参数
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+static double r2d(AVRational r) {
+    return r.num == 0 || r.den == 0 ? 0 : (double) r.num / (double) r.den;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test027(JNIEnv *env, jobject thiz) {
+    const char *conf = avcodec_configuration(); //配置信息
+    XLOGI("%s", conf);
+    // 初始化解封装
+    av_register_all();
+    // 初始化网络
+    avformat_network_init();
+    // 打开文件
+    AVFormatContext *ic = NULL;
+    char path[] = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+    int re = avformat_open_input(&ic, path, 0, 0);
+    if (re != 0) {
+        XLOGE("avformat_open_input failed!:%s", av_err2str(re));
+        return;
+    } else {
+        XLOGE("avformat_open_input success!!");
+    }
+    // 获取流信息
+    re = avformat_find_stream_info(ic, 0);
+    if (re != 0) {
+        XLOGE("avformat_find_stream_info failed! %s", av_err2str(re));
+    } else {
+        XLOGI("duration = %d nb_streams = %d", ic->duration, ic->nb_streams);
+    }
+
+    int fps = 0;
+    int videoStream = 0;
+    int audioStream = 1;
+
+    for (int i = 0; i < ic->nb_streams; i++) {
+        AVStream *as = ic->streams[i];
+        if (as->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) { // 视频流
+            XLOGI("视频流信息");
+            videoStream = i;
+            fps = r2d(as->avg_frame_rate);
+            XLOGI("fps = %d, width = %d, height = %d, codeid = %d pixformat = %d", fps,
+                  as->codecpar->width, as->codecpar->height, as->codecpar->codec_id,
+                  as->codecpar->format
+            );
+
+        } else if (as->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) { // 音频流
+            XLOGI("音频流信息");
+            audioStream = i;
+            XLOGI("sample_rate = %d, channels = %d, sample_format = %d", as->codecpar->sample_rate,
+                  as->codecpar->channels, as->codecpar->format
+            );
+        }
+
+    }
+
+    // 关闭上下文
+    avformat_close_input(&ic);
+}
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// av_read_frame和av_seek_frame
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test032(JNIEnv *env, jobject thiz) {
+    const char *conf = avcodec_configuration(); //配置信息
+    XLOGI("%s", conf);
+    // 初始化解封装
+    av_register_all();
+    // 初始化网络
+    avformat_network_init();
+    // 打开文件
+    AVFormatContext *ic = NULL;
+    char path[] = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+    int re = avformat_open_input(&ic, path, 0, 0);
+    if (re != 0) {
+        XLOGE("avformat_open_input failed!:%s", av_err2str(re));
+        return;
+    } else {
+        XLOGE("avformat_open_input success!!");
+    }
+    // 获取流信息
+    re = avformat_find_stream_info(ic, 0);
+    if (re != 0) {
+        XLOGE("avformat_find_stream_info failed! %s", av_err2str(re));
+    } else {
+        XLOGI("duration = %d nb_streams = %d", ic->duration, ic->nb_streams);
+    }
+
+    int fps = 0;
+    int videoStream = 0;
+    int audioStream = 1;
+
+    for (int i = 0; i < ic->nb_streams; i++) {
+        AVStream *as = ic->streams[i];
+        if (as->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) { // 视频流
+            XLOGI("视频流信息");
+            videoStream = i;
+            fps = r2d(as->avg_frame_rate);
+            XLOGI("fps = %d, width = %d, height = %d, codeid = %d pixformat = %d", fps,
+                  as->codecpar->width, as->codecpar->height, as->codecpar->codec_id,
+                  as->codecpar->format
+            );
+
+        } else if (as->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) { // 音频流
+            XLOGI("音频流信息");
+            audioStream = i;
+            XLOGI("sample_rate = %d, channels = %d, sample_format = %d", as->codecpar->sample_rate,
+                  as->codecpar->channels, as->codecpar->format
+            );
+        }
+
+    }
+
+    // 获取音频流信息
+    audioStream = av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+    XLOGI("av_find_best_stream audioStream = %d", audioStream);
+
+    // 读取帧数据
+    AVPacket *pkt = av_packet_alloc(); //分配packtet空间
+    for (;;) {
+        int re = av_read_frame(ic, pkt);
+        if (re != 0) {
+            XLOGI("读取到结尾处");
+            int pos = 20 * r2d(ic->streams[videoStream]->time_base);
+            av_seek_frame(ic, videoStream, pos, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_FRAME);
+            continue;
+        } else {
+            XLOGI("stream = %d, size = %d, pts = %lld, flag = %d", pkt->stream_index, pkt->size,
+                  pkt->pts, pkt->flags);
+        }
+        av_packet_unref(pkt);
+    }
+
+    // 关闭上下文
+    avformat_close_input(&ic);
+}
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// AVCodecContext解码上下文初始化
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test033(JNIEnv *env, jobject thiz) {
+    const char *conf = avcodec_configuration(); //配置信息
+    XLOGI("%s", conf);
+    // 初始化解封装
+    av_register_all();
+    // 初始化网络
+    avformat_network_init();
+    // 打开文件
+    AVFormatContext *ic = NULL;
+    char path[] = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+    int re = avformat_open_input(&ic, path, 0, 0);
+    if (re != 0) {
+        XLOGE("avformat_open_input failed!:%s", av_err2str(re));
+        return;
+    } else {
+        XLOGE("avformat_open_input success!!");
+    }
+    // 获取流信息
+    re = avformat_find_stream_info(ic, 0);
+    if (re != 0) {
+        XLOGE("avformat_find_stream_info failed! %s", av_err2str(re));
+    } else {
+        XLOGI("duration = %d nb_streams = %d", ic->duration, ic->nb_streams);
+    }
+
+    int fps = 0;
+    int videoStream = 0;
+    int audioStream = 1;
+
+    for (int i = 0; i < ic->nb_streams; i++) {
+        AVStream *as = ic->streams[i];
+        if (as->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) { // 视频流
+            XLOGI("视频流信息");
+            videoStream = i;
+            fps = r2d(as->avg_frame_rate);
+            XLOGI("fps = %d, width = %d, height = %d, codeid = %d pixformat = %d", fps,
+                  as->codecpar->width, as->codecpar->height, as->codecpar->codec_id,
+                  as->codecpar->format
+            );
+
+        } else if (as->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) { // 音频流
+            XLOGI("音频流信息");
+            audioStream = i;
+            XLOGI("sample_rate = %d, channels = %d, sample_format = %d", as->codecpar->sample_rate,
+                  as->codecpar->channels, as->codecpar->format
+            );
+        }
+
+    }
+
+    // 获取音频流信息
+    audioStream = av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+    XLOGI("av_find_best_stream audioStream = %d", audioStream);
+
+    // 软解码
+    AVCodec *codec = avcodec_find_decoder(ic->streams[videoStream]->codecpar->codec_id);
+    // 硬解码
+    //codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    if (!codec) {
+        XLOGE("avcodec_find_decoder failed");
+        return;
+    } else {
+        XLOGI("avcodec_find_decoder success!");
+    }
+
+    // 解码器初始化
+    AVCodecContext *cc = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(cc, ic->streams[videoStream]->codecpar);
+    cc->thread_count = 1;
+
+    // 打开解码器
+    re = avcodec_open2(cc, 0, 0);
+    if (re != 0) {
+        XLOGE("avcodec_open2 failed!");
+        return;
+    } else {
+        XLOGI("avcodec_open2 success!");
+    }
+
+    // 读取帧数据
+    AVPacket *pkt = av_packet_alloc(); //分配packtet空间
+    for (;;) {
+        int re = av_read_frame(ic, pkt);
+        if (re != 0) {
+            XLOGI("读取到结尾处");
+            int pos = 20 * r2d(ic->streams[videoStream]->time_base);
+            av_seek_frame(ic, videoStream, pos, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_FRAME);
+            continue;
+        } else {
+            //XLOGI("stream = %d, size = %d, pts = %lld, flag = %d", pkt->stream_index, pkt->size,
+            //      pkt->pts, pkt->flags);
+        }
+        av_packet_unref(pkt);
+    }
+    // 关闭上下文
+    avformat_close_input(&ic);
+}
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//打开音频解码器上下文
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test034(JNIEnv *env, jobject thiz) {
+    //初始化解封装
+    av_register_all();
+    //初始化网络
+    avformat_network_init();
+
+    avcodec_register_all();
+
+    //打开文件
+    AVFormatContext *ic = NULL;
+    char path[] = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+    //char path[] = "/sdcard/video.flv";
+    int re = avformat_open_input(&ic, path, 0, 0);
+    if (re != 0) {
+        XLOGE("avformat_open_input failed!:%s", av_err2str(re));
+        return;
+    }
+    XLOGI("avformat_open_input %s success!", path);
+    //获取流信息
+    re = avformat_find_stream_info(ic, 0);
+    if (re != 0) {
+        XLOGE("avformat_find_stream_info failed!");
+    }
+    XLOGI("duration = %lld nb_streams = %d", ic->duration, ic->nb_streams);
+
+    int fps = 0;
+    int videoStream = 0;
+    int audioStream = 1;
+
+    for (int i = 0; i < ic->nb_streams; i++) {
+        AVStream *as = ic->streams[i];
+        if (as->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            XLOGI("视频数据");
+            videoStream = i;
+            fps = r2d(as->avg_frame_rate);
+
+            XLOGI("fps = %d,width=%d height=%d codeid=%d pixformat=%d", fps,
+                  as->codecpar->width,
+                  as->codecpar->height,
+                  as->codecpar->codec_id,
+                  as->codecpar->format
+            );
+        } else if (as->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            XLOGI("音频数据");
+            audioStream = i;
+            XLOGI("sample_rate=%d channels=%d sample_format=%d",
+                  as->codecpar->sample_rate,
+                  as->codecpar->channels,
+                  as->codecpar->format
+            );
+        }
+    }
+
+    // ic->streams[videoStream]
+    audioStream = av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+    XLOGI("av_find_best_stream = %d", audioStream);
+
+
+    //////////////////////////////////////////////////////////////
+    // 打开视频解码器
+    // 软解码器
+    AVCodec *codec = avcodec_find_decoder(ic->streams[videoStream]->codecpar->codec_id);
+    //硬解码
+    //codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    if (!codec) {
+        XLOGE("avcodec_find_decoder failed!");
+        return;
+    }
+    // 解码初始化
+    AVCodecContext *vc = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(vc, ic->streams[videoStream]->codecpar);
+    vc->thread_count = 1;
+    // 打开解码器
+    re = avcodec_open2(vc, 0, 0);
+    if (re != 0) {
+        XLOGE("avcodec_open2 vido failed!");
+    }
+
+    ///////////////////////////////////////////////////////////
+    // 打开音频解码器
+    // 软解码器
+    AVCodec *acodec = avcodec_find_decoder(ic->streams[audioStream]->codecpar->codec_id);
+    if (!acodec) {
+        XLOGE("avcodec_find_decoder failed!");
+        return;
+    }
+    // 解码器初始化
+    AVCodecContext *ac = avcodec_alloc_context3(acodec);
+    avcodec_parameters_to_context(ac, ic->streams[audioStream]->codecpar);
+    ac->thread_count = 1;
+    // 打开解码器
+    re = avcodec_open2(ac, 0, 0);
+    if (re != 0) {
+        XLOGE("avcodec_open2 failed!");
+        return;
+    }
+
+
+    // 读取帧数据
+    AVPacket *pkt = av_packet_alloc();
+    for (;;) {
+        int re = av_read_frame(ic, pkt);
+        if (re != 0) {
+            XLOGI("读取到结尾处");
+            int pos = 20 * r2d(ic->streams[videoStream]->time_base);
+            av_seek_frame(ic, videoStream, pos, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_FRAME);
+            continue;
+        }
+        XLOGI("stream = %d size =%d pts=%lld flag=%d",
+              pkt->stream_index, pkt->size, pkt->pts, pkt->flags
+        );
+        // 清理
+        av_packet_unref(pkt);
+
+        break;
+    }
+
+    // 关闭上下文
+    avformat_close_input(&ic);
+
+}
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//完成音视频解码
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test037(JNIEnv *env, jobject thiz) {
+    // 初始化解封装
+    av_register_all();
+    avformat_network_init();
+    avcodec_register_all();
+
+    //打开文件
+    //////////////////////////////////////////////////////////////////////////
+    AVFormatContext *ic = NULL;
+    char path[] = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+    //char path[] = "/sdcard/video.flv";
+    int re = avformat_open_input(&ic, path, 0, 0);
+    if (re != 0) {
+        XLOGE("avformat_open_input failed!:%s", av_err2str(re));
+        return;
+    }
+    XLOGI("avformat_open_input %s success!", path);
+
+    //////////////////////////////////////////////////////////////////////////
+    //获取流信息
+    re = avformat_find_stream_info(ic, 0);
+    if (re != 0) {
+        XLOGE("avformat_find_stream_info failed!");
+    }
+    XLOGI("duration = %lld nb_streams = %d", ic->duration, ic->nb_streams);
+
+
+    ///////////////////////////////////////////////////////////////////////
+    // 遍历流信息
+    int fps = 0;
+    int videoStream = 0;
+    int audioStream = 1;
+    for (int i = 0; i < ic->nb_streams; i++) {
+        AVStream *as = ic->streams[i];
+        if (as->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            XLOGI("视频数据");
+            videoStream = i;
+            fps = r2d(as->avg_frame_rate);
+
+            XLOGI("fps = %d,width=%d height=%d codeid=%d pixformat=%d",
+                  fps,
+                  as->codecpar->width,
+                  as->codecpar->height,
+                  as->codecpar->codec_id,
+                  as->codecpar->format
+            );
+        } else if (as->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            XLOGI("音频数据");
+            audioStream = i;
+            XLOGI("sample_rate=%d channels=%d sample_format=%d",
+                  as->codecpar->sample_rate,
+                  as->codecpar->channels,
+                  as->codecpar->format
+            );
+        }
+    }
+    // 获取音频流信息
+    audioStream = av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+    XLOGI("av_find_best_stream audioStream = %d", audioStream);
+
+    ///////////////////////////////////////////////////////////
+    // 打开视频解码器
+    AVCodec *codec = avcodec_find_decoder(ic->streams[videoStream]->codecpar->codec_id);
+    if (!codec) {
+        XLOGE("avcodec_find_decoder failed!");
+        return;
+    } else {
+        XLOGI("avcodec_find_decoder success!");
+    }
+    // 解码器初始化
+    AVCodecContext *vc = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(vc, ic->streams[videoStream]->codecpar);
+    vc->thread_count = 1;
+    // 打开编码器
+    re = avcodec_open2(vc, 0, 0);
+    XLOGI("vc timebase = %d/ %d", vc->time_base.num, vc->time_base.den);
+    if (re != 0) {
+        XLOGE("avcodec_open2 video failed!");
+        return;
+    } else {
+        XLOGE("avcodec_open2 video success!");
+    }
+
+
+    ///////////////////////////////////////////////////////////
+    // 打开音频解码器
+    AVCodec *acodec = avcodec_find_decoder(ic->streams[audioStream]->codecpar->codec_id);
+    if (!acodec) {
+        XLOGE("avcodec_find_decoder failed");
+        return;
+    } else {
+        XLOGI("avcodec_find_decoder success");
+    }
+    // 解码器初始化
+    AVCodecContext *ac = avcodec_alloc_context3(acodec);
+    avcodec_parameters_to_context(ac, ic->streams[audioStream]->codecpar);
+    ac->thread_count = 1;
+    // 打开解码器
+    re = avcodec_open2(ac, 0, 0);
+    if (re != 0) {
+        XLOGE("avcodec_open2 audio failed!");
+        return;
+    } else {
+        XLOGI("avcodec_open2 audio success!");
+    }
+
+    // 读取帧数据
+    AVPacket *pkt = av_packet_alloc();
+    AVFrame *frame = av_frame_alloc();
+    while (true) {
+        re = av_read_frame(ic, pkt); // 读取一帧
+        if (re != 0) {
+            XLOGI("读取结尾处！");
+            int pos = 20 * r2d(ic->streams[videoStream]->time_base);
+            av_seek_frame(ic, videoStream, pos, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_FRAME);
+            continue;
+        }
+        AVCodecContext *cc = vc;
+        if (pkt->stream_index == audioStream) cc = ac;
+
+        // 发送到线程中解码
+        re = avcodec_send_packet(cc, pkt);
+        // 清理
+        int p = pkt->pts;
+        av_packet_unref(pkt);
+        if (re != 0) {
+            XLOGE("avcodec_send_packet faild!");
+            continue;
+        }
+        while (true) { // 接收解码后的数据
+            re = avcodec_receive_frame(cc, frame);
+            if (re != 0) {
+                break;
+            }
+            XLOGI("avcodec_receive_frame %lld", frame->pts);
+        }
+
+
+        break;
+    }
+
+    // 关闭上下文
+    avformat_close_input(&ic);
+}
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//ffmpeg调用MediaCodec实现硬解码代码演示
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// 当前时间戳 clock
+long long GetNowMs() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    int sec = tv.tv_sec % 360000;
+    long long t = sec * 1000 + tv.tv_usec / 1000;
+    return t;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test039(JNIEnv *env, jobject thiz) {
+    // 初始化解封装
+    av_register_all();
+    avformat_network_init();
+    avcodec_register_all();
+
+    //打开文件
+    //////////////////////////////////////////////////////////////////////////
+    AVFormatContext *ic = NULL;
+    char path[] = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+    //char path[] = "/sdcard/video.flv";
+    int re = avformat_open_input(&ic, path, 0, 0);
+    if (re != 0) {
+        XLOGE("avformat_open_input failed!:%s", av_err2str(re));
+        return;
+    }
+    XLOGI("avformat_open_input %s success!", path);
+
+    //////////////////////////////////////////////////////////////////////////
+    //获取流信息
+    re = avformat_find_stream_info(ic, 0);
+    if (re != 0) {
+        XLOGE("avformat_find_stream_info failed!");
+    }
+    XLOGI("duration = %lld nb_streams = %d", ic->duration, ic->nb_streams);
+
+    ///////////////////////////////////////////////////////////////////////
+    // 遍历流信息
+    int fps = 0;
+    int videoStream = 0;
+    int audioStream = 1;
+    for (int i = 0; i < ic->nb_streams; i++) {
+        AVStream *as = ic->streams[i];
+        if (as->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            XLOGI("视频数据");
+            videoStream = i;
+            fps = r2d(as->avg_frame_rate);
+
+            XLOGI("fps = %d,width=%d height=%d codeid=%d pixformat=%d",
+                  fps,
+                  as->codecpar->width,
+                  as->codecpar->height,
+                  as->codecpar->codec_id,
+                  as->codecpar->format
+            );
+        } else if (as->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            XLOGI("音频数据");
+            audioStream = i;
+            XLOGI("sample_rate=%d channels=%d sample_format=%d",
+                  as->codecpar->sample_rate,
+                  as->codecpar->channels,
+                  as->codecpar->format
+            );
+        }
+    }
+    // 获取音频流信息
+    audioStream = av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+    XLOGI("av_find_best_stream audioStream = %d", audioStream);
+
+    //////////////////////////////////////////////////////////
+    // 打开视频编码器
+    // *****软解码
+    AVCodec *codec = avcodec_find_decoder(ic->streams[videoStream]->codecpar->codec_id);
+    // 硬解码
+    //codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    if (!codec) {
+        XLOGE("avcodec_find_decoder video failed!");
+        return;
+    }
+
+    // *****解码器初始化
+    AVCodecContext *vc = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(vc, ic->streams[videoStream]->codecpar);
+    vc->thread_count = 8;
+
+    // *****打开解码器
+    re = avcodec_open2(vc, 0, 0);
+    XLOGI("vc timebase = %d/ %d", vc->time_base.num, vc->time_base.den);
+    if (re != 0) {
+        XLOGE("avcodec_open2 video failed!");
+        return;
+    } else {
+        XLOGI("avcodec_open2 video success!");
+    }
+
+
+    //////////////////////////////////////////////////////////
+    // 打开音频编码器
+    // *****软解码
+    AVCodec *acodec = avcodec_find_decoder(ic->streams[audioStream]->codecpar->codec_id);
+    if (!acodec) {
+        XLOGE("avcodec_find_decoder failed");
+        return;
+    } else {
+        XLOGI("avcodec_find_decoder success");
+    }
+
+    // *****解码器初始化
+    AVCodecContext *ac = avcodec_alloc_context3(acodec);
+    avcodec_parameters_to_context(ac, ic->streams[audioStream]->codecpar);
+    ac->thread_count = 8;
+
+    // *****打开编码器
+    re = avcodec_open2(ac, 0, 0);
+    if (re != 0) {
+        XLOGE("avcodec_open2 audio failed!");
+        return;
+    } else {
+        XLOGI("avcodec_open2 audio success!");
+    }
+
+
+    //////////////////////////////////////////////////////////
+    // 读取帧数据
+    AVPacket *pkt = av_packet_alloc();
+    AVFrame *frame = av_frame_alloc();
+    long long start = GetNowMs();
+    int frameCount = 0;
+    while (true) {
+        // 超过3秒
+        if (GetNowMs() - start >= 3000) {
+            XLOGE("noew decode fps is %d", frameCount / 3);
+            start = GetNowMs();
+            frameCount = 0;
+        }
+
+        // 读取一帧
+        if (re != 0) {
+            XLOGI("读取到结尾处");
+            int pos = 20 * r2d(ic->streams[videoStream]->time_base);
+            av_seek_frame(ic, videoStream, pos, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_FRAME);
+            continue;
+        }
+
+        AVCodecContext *cc = vc;
+        if (pkt->stream_index == audioStream) cc = ac;
+
+        // 发送到线程中解码
+        re = avcodec_send_packet(cc, pkt);
+        // 清理
+        int p = pkt->pts;
+        av_packet_unref(pkt);
+
+        if (re != 0) {
+            XLOGE("avcodec_send_packet failed!");
+            continue;
+        }
+        while (true) {
+            re = avcodec_receive_frame(cc, frame);
+            if(re != 0) break;
+            if(cc == vc) frameCount++;
+        }
+    }
+
+
+    // 关闭上下文
+    avformat_close_input(&ic);
 }

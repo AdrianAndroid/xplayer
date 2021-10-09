@@ -104,28 +104,67 @@
 
         </LinearLayout>
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_height="match_parent">
 
-            <Button
-                android:id="@+id/testAudio"
-                android:layout_width="wrap_content"
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="测试音频" />
+                android:orientation="vertical">
 
-            <View
-                android:layout_width="10dp"
-                android:layout_height="10dp" />
+                <Button
+                    android:id="@+id/testAudio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="测试音频" />
 
-            <Button
-                android:id="@+id/testVideo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="测试视频" />
-        </LinearLayout>
+                <Button
+                    android:id="@+id/testVideo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="测试视频" />
 
+                <Button
+                    android:id="@+id/test027"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="通过遍历获取AVStream音视频流信息并打印参数" />
+
+                <Button
+                    android:id="@+id/test032"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="av_read_frame和av_seek_frame" />
+
+                <Button
+                    android:id="@+id/test033"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="AVCodecContext解码上下文初始化" />
+
+                <Button
+                    android:id="@+id/test034"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="打开音频解码器上下文" />
+
+                <Button
+                    android:id="@+id/test037"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="完成音视频解码" />
+
+                <Button
+                    android:id="@+id/test039"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ffmpeg调用MediaCodec实现硬解码代码演示" />
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
