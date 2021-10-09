@@ -10,6 +10,10 @@
 #include <jni.h>
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include <iostream>
+#include <android/native_window_jni.h>
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -17,11 +21,12 @@ extern "C" {
 #include <libavcodec/jni.h>
 }
 
-#include <iostream>
 
 using namespace std;
 
 static const char *url_pcm_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.pcm";
+//ffmpeg -i v1080.mp4 -t 10 -vn -ar 48000 -ac 2 -f f32le v1080_2.pcm
+static const char *url_pcm_v1080_2 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080_2.pcm";
 static const char *url_pcm_mydream = "/sdcard/Android/data/com.joyy.nativecpp/cache/mydream.pcm";
 static const char *url_mp4_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
 static const char *url_yuv_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.yuv";
@@ -336,6 +341,7 @@ Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url
 
     env->ReleaseStringUTFChars(url, _url);
 }
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_initView(JNIEnv *env, jobject thiz, jobject surface) {
@@ -421,7 +427,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
 //    env->ReleaseStringUTFChars(url, _url);
 
     // 测试打开文件
-    const char *m_url = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.pcm";
+    const char *m_url = url_pcm_v1080_2;
     FILE *fp = fopen(m_url, "rb");
     if (fp) {
         XLOGI("test %s file open success ", m_url);
@@ -466,10 +472,11 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     // 缓冲队列
     SLDataLocator_AndroidSimpleBufferQueue que = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 10};
     // 音频格式
+    // ffmpeg -i v1080.mp4 -t 10 -vn -ar 48000 -ac 2 -f f32le v1080_2.pcm
     SLDataFormat_PCM pcm = {
             SL_DATAFORMAT_PCM,
             2, //声道数
-            SL_SAMPLINGRATE_44_1,//SL_SAMPLINGRATE_16,
+            SL_SAMPLINGRATE_48,
             SL_PCMSAMPLEFORMAT_FIXED_16,
             SL_PCMSAMPLEFORMAT_FIXED_16,
             SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
@@ -613,7 +620,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio2(JNIEnv *env, jobject thiz) {
     (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject, 1, ids, req);
     (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
     sLresult = (*outputMixObject)->GetInterface(outputMixObject, SL_IID_ENVIRONMENTALREVERB,
-                                     &outputMixEnvironmentalReverb);
+                                                &outputMixEnvironmentalReverb);
     if (sLresult == SL_RESULT_SUCCESS) {
         (*outputMixEnvironmentalReverb)->SetEnvironmentalReverbProperties(
                 outputMixEnvironmentalReverb, &reverbSettings
@@ -1411,4 +1418,182 @@ Java_com_joyy_nativecpp_MainActivity_test039(JNIEnv *env, jobject thiz) {
 
     // 关闭上下文
     avformat_close_input(&ic);
+}
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+//OpenGlES sharder初始化完成并编译顶点和着色器代码
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+//顶点着色器glsl
+#define GET_STR(x) #x
+static const char *vertexShader = GET_STR(
+        attribute vec4 aPosition; //顶点坐标
+        attribute vec2 aTexCoord; //材质顶点坐标
+        varying vec2 vTexCoord;   //输出的材质坐标
+        void main() {
+            vTexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+            gl_Position = aPosition;
+        }
+);
+
+//片元着色器,软解码和部分x86硬解码
+static const char *fragYUV420P = GET_STR(
+        precision mediump float;    //精度
+        varying vec2 vTexCoord;     //顶点着色器传递的坐标
+        uniform sampler2D yTexture; //输入的材质（不透明灰度，单像素）
+        uniform sampler2D uTexture;
+        uniform sampler2D vTexture;
+        void main() {
+            vec3 yuv;
+            vec3 rgb;
+            yuv.r = texture2D(yTexture, vTexCoord).r;
+            yuv.g = texture2D(uTexture, vTexCoord).r - 0.5;
+            yuv.b = texture2D(vTexture, vTexCoord).r - 0.5;
+            rgb = mat3(1.0, 1.0, 1.0,
+                       0.0, -0.39465, 2.03211,
+                       1.13983, -0.58060, 0.0) * yuv;
+            //输出像素颜色
+            gl_FragColor = vec4(rgb, 1.0);
+        }
+);
+
+GLint InitShader(const char *code, GLint type) {
+    //创建shader
+    GLint sh = glCreateShader(type);
+    if (sh == 0) {
+        XLOGD("glCreateShader %d failed!", type);
+        return 0;
+    }
+    //加载shader
+    glShaderSource(sh,
+                   1,    //shader数量
+                   &code, //shader代码
+                   0);   //代码长度
+    //编译shader
+    glCompileShader(sh);
+
+    //获取编译情况
+    GLint status;
+    glGetShaderiv(sh, GL_COMPILE_STATUS, &status);
+    if (status == 0) {
+        XLOGD("glCompileShader failed!");
+        return 0;
+    }
+    XLOGD("glCompileShader success!");
+    return sh;
+}
+
+//OpenGlES sharder初始化完成并编译顶点和着色器代码
+//1、获取 EGL Display 对象：eglGetDisplay()
+//2、初始化与 EGLDisplay 之间的连接：eglInitialize()
+//3、获取 EGLConfig 对象：eglChooseConfig()
+//4、创建 EGLContext 实例：eglCreateContext()
+//5、创建 EGLSurface 实例：eglCreateWindowSurface()
+//6、连接 EGLContext 和 EGLSurface：eglMakeCurrent()
+//7、使用 OpenGL ES API 绘制图形：gl_*()
+//8、切换 front buffer 和 back buffer 送显：eglSwapBuffer()
+//9、断开并释放与 EGLSurface 关联的 EGLContext 对象：eglRelease()
+//10、删除 EGLSurface 对象
+//11、删除 EGLContext 对象
+//12、终止与 EGLDisplay 之间的连接
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject surface) {
+    XLOGI("Java_com_joyy_nativecpp_MainActivity_test57");
+    const char *url = url_mp4_v1080;
+    // 1. 获取原始窗口
+    ANativeWindow *nwin = ANativeWindow_fromSurface(env, surface);
+    if (!nwin) {
+        XLOGE("ANativeWindow_fromSurface failed!");
+        return;
+    }
+
+    ///////////////////
+    //EGL
+    // 1. GEL display的创建和初始化
+    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (display == EGL_NO_DISPLAY) {
+        XLOGE("eglGetDisplay failed!");
+        return;
+    }
+    if (EGL_TRUE != eglInitialize(display, 0, 0)) {
+        XLOGE("eglInitialize failed!");
+        return;
+    }
+
+    // 2 surface
+    // 2-1 surface窗口配置
+    // 输出配置
+    EGLConfig config;
+    EGLint configNum;
+    EGLint i_num = 8;
+    EGLint configSpec[] = {
+            EGL_RED_SIZE, i_num,
+            EGL_GREEN_SIZE, i_num,
+            EGL_BLUE_SIZE, i_num,
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_NONE
+    };
+    if (EGL_TRUE != eglChooseConfig(display, configSpec, &config, 1, &configNum)) {
+        XLOGD("eglChooseConfig failed!");
+        return;
+    }
+
+    // 3 context 创建关联的上下文
+    const EGLint ctxAttr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, ctxAttr);
+    if (context == EGL_NO_CONTEXT) {
+        XLOGE("eglCreateContext failed!");
+        return;
+    }
+
+//    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
+//    const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    // 创建surface
+    EGLSurface winsurface = eglCreateWindowSurface(display, config, nwin, 0);
+    if (winsurface == EGL_NO_SURFACE) {
+        XLOGE("eglCreateWindowSurface failed!");
+        return;
+    }
+
+
+    if (EGL_TRUE != eglMakeCurrent(display, winsurface, winsurface, context)) {
+        XLOGE("eglMakeCurrent failed!");
+        return;
+    }
+    XLOGI("EGL Init Success!");
+
+    // 顶点和片元shader初始化
+    //顶点shader初始化
+    GLint vsh = InitShader(vertexShader, GL_VERTEX_SHADER);
+    // 片元yuv420 shader初始化
+    GLint fsh = InitShader(fragYUV420P, GL_FRAGMENT_SHADER);
+}
+
+
+//OpenglES program 渲染程序初始化给shader传递顶点和材质顶点数据
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test59(JNIEnv *env, jobject thiz, jobject surface) {
+    XLOGI("Java_com_joyy_nativecpp_MainActivity_test59");
+}
+
+//OpenglES opengl的yuv纹理的创建和初始化
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test60(JNIEnv *env, jobject thiz, jobject surface) {
+    XLOGI("Java_com_joyy_nativecpp_MainActivity_test60");
+}
+
+//OpenglES opengl纹理数据修改和显示
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test61(JNIEnv *env, jobject thiz, jobject surface) {
+    XLOGI("Java_com_joyy_nativecpp_MainActivity_test61");
+}
+
+//OpenglES 通过 opengl纹理修改完成yuv文件的播放显示
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_test62(JNIEnv *env, jobject thiz, jobject surface) {
+    XLOGI("Java_com_joyy_nativecpp_MainActivity_test62");
 }

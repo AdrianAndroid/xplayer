@@ -60,7 +60,61 @@ public class MainActivity extends AppCompatActivity {
         file.mkdirs();
     }
 
+    //OpenGlES sharder初始化完成并编译顶点和着色器代码
+    public native void test57(Object surface);
+
+    //OpenglES program 渲染程序初始化给shader传递顶点和材质顶点数据
+    public native void test59(Object surface);
+
+    //OpenglES opengl的yuv纹理的创建和初始化
+    public native void test60(Object surface);
+
+    //OpenglES opengl纹理数据修改和显示
+    public native void test61(Object surface);
+
+    //OpenglES 通过 opengl纹理修改完成yuv文件的播放显示
+    public native void test62(Object surface);
+
     private void initTest() {
+
+        //视频
+        binding.test57.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        test57(binding.mFPlay.getHolder().getSurface());
+                    }
+                }).start();
+            }
+        });
+        binding.test59.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test59(binding.mFPlay.getHolder().getSurface());
+            }
+        });
+        binding.test60.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test60(binding.mFPlay.getHolder().getSurface());
+            }
+        });
+        binding.test61.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test61(binding.mFPlay.getHolder().getSurface());
+            }
+        });
+        binding.test62.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                test62(binding.mFPlay.getHolder().getSurface());
+            }
+        });
+
+        // 音频
         findViewById(R.id.testAudio).setOnClickListener(new View.OnClickListener() {
             @SuppressLint("SdCardPath")
             @Override

@@ -92,8 +92,8 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         nativecpp
-        GLESv2 EGL
-        OpenSLES
+        GLESv2 EGL # 视频
+        OpenSLES # 音频
         android
         avcodec avformat avutil swscale swresample
         # Links the target library to the log library
