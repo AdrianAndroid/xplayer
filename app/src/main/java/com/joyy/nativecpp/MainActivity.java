@@ -69,6 +69,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.testAudio2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                testAudio2();
+            }
+        });
+        findViewById(R.id.releaseAudio).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                releaseAudio2();
+            }
+        });
+
         findViewById(R.id.testVideo).setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -219,8 +232,14 @@ public class MainActivity extends AppCompatActivity {
 
     private long mNativePlayId;
 
+    // 测试音频
     public native void testAudio(String url);
 
+    public native void testAudio2();
+
+    public native void releaseAudio2();
+
+    // 测试视频
     public native void testVideo(String url);
 
 

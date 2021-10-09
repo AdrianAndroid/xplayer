@@ -21,6 +21,11 @@ extern "C" {
 
 using namespace std;
 
+static const char *url_pcm_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.pcm";
+static const char *url_pcm_mydream = "/sdcard/Android/data/com.joyy.nativecpp/cache/mydream.pcm";
+static const char *url_mp4_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+static const char *url_yuv_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.yuv";
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_joyy_nativecpp_MainActivity_stringFromJNI(
         JNIEnv *env,
@@ -404,7 +409,7 @@ void PcmCall(SLAndroidSimpleBufferQueueItf bf, void *context) {
     } else {
         XLOGE("feof(fp) != 0");
     }
-    XSleep(50);
+    XSleep(10);
 }
 
 extern "C"
@@ -425,6 +430,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
         XLOGE("test %s file open failed! with %d , %s", m_url, errno, strerror(errno));
     }
 
+    ///////////////////////////////////////////////////////////
     // 1. 创建引擎
     SLEngineItf eng = CreateSL();
     if (eng) {
@@ -434,6 +440,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
         return;
     }
 
+    ////////////////////////////////////////////////////////
     // 2. 创建混音器
     SLObjectItf mix = NULL;
     SLresult re = 0;
@@ -454,6 +461,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     SLDataLocator_OutputMix outmix = {SL_DATALOCATOR_OUTPUTMIX, mix};
     SLDataSink audioSink = {&outmix, 0};
 
+    ////////////////////////////////////////////////////////
     // 3. 配置音频信息
     // 缓冲队列
     SLDataLocator_AndroidSimpleBufferQueue que = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 10};
@@ -461,7 +469,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     SLDataFormat_PCM pcm = {
             SL_DATAFORMAT_PCM,
             2, //声道数
-            SL_SAMPLINGRATE_16,
+            SL_SAMPLINGRATE_44_1,//SL_SAMPLINGRATE_16,
             SL_PCMSAMPLEFORMAT_FIXED_16,
             SL_PCMSAMPLEFORMAT_FIXED_16,
             SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
@@ -469,6 +477,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     };
     SLDataSource ds = {&que, &pcm};
 
+    ////////////////////////////////////////////////////////
     // 4. 创建播放器
     SLObjectItf player = NULL;
     SLPlayItf iplayer = NULL;
@@ -524,9 +533,165 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     // 启动队列回调
     (*pcmQue)->Enqueue(pcmQue, "", 1);
 }
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// 测试音频2
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//https://blog.csdn.net/start_mao/article/details/108690959
+//https://github.com/mandroidstudy/OpenSLESDemo/blob/master/app/src/main/cpp/native-lib.cpp
+static SLObjectItf engineObject = NULL;
+static SLEngineItf engineEngine = NULL;
+
+// output mix
+static const SLEnvironmentalReverbSettings reverbSettings =
+        SL_I3DL2_ENVIRONMENT_PRESET_STONECORRIDOR;
+static SLObjectItf outputMixObject = NULL;
+static SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
+
+// player
+static SLObjectItf playerObject = NULL;
+static SLPlayItf player;
+
+//bufferQueueItf
+static SLAndroidSimpleBufferQueueItf bufferQueueItf;
+
+FILE *file;
+u_int8_t *buff;
+void *pcmData;
+
+size_t getPcmData(void **_pcmData) {
+    while (feof(file) == 0) {
+        size_t len = fread(buff, 1, 44100 * 2 * 2, file);
+        if (len == 0) {
+            XLOGI("play end!");
+        } else {
+            XLOGI("playing");
+        }
+        (*_pcmData) = buff;
+        return len;
+    }
+    return static_cast<size_t>(-1);
+}
+
+// 每次缓存队列的数据播放完就会回调这个函数
+void bufferQueueCallable(SLAndroidSimpleBufferQueueItf caller, void *pContext) {
+    size_t len = getPcmData(&pcmData);
+    if (pcmData && len != -1) {
+        (*bufferQueueItf)->Enqueue(bufferQueueItf, pcmData, len);
+    } else {
+        XLOGI("读取结束");
+        if (file != NULL) {
+            fclose(file);
+            file = NULL;
+        }
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_testAudio2(JNIEnv *env, jobject thiz) {
+    const char *c_url = url_pcm_mydream;
+    // 打开文件
+    file = fopen(c_url, "r");
+    if (!file) {
+        XLOGE("can not open file:%s", c_url);
+        return;
+    }
+    buff = static_cast<u_int8_t *>(malloc(44100 * 2 * 2));
+    SLresult sLresult = -1;
+    ////////////////////////////////////////////////////////////////////////
+    // 1. 获取引擎接口
+    slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
+    (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
+    (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine);
+
+    ////////////////////////////////////////////////////////////////////////
+    // 2. 创建输出混音器
+    const SLInterfaceID ids[1] = {SL_IID_ENVIRONMENTALREVERB};
+    const SLboolean req[1] = {SL_BOOLEAN_FALSE};
+    (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject, 1, ids, req);
+    (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
+    sLresult = (*outputMixObject)->GetInterface(outputMixObject, SL_IID_ENVIRONMENTALREVERB,
+                                     &outputMixEnvironmentalReverb);
+    if (sLresult == SL_RESULT_SUCCESS) {
+        (*outputMixEnvironmentalReverb)->SetEnvironmentalReverbProperties(
+                outputMixEnvironmentalReverb, &reverbSettings
+        );
+        (void) sLresult;
+    }
 
 
+    ////////////////////////////////////////////////////////////////////////
+    // 3。创建播放器
+    // 创建播放器需要为其指定 Data Source 和 Data Sink
+    SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
+            SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,
+            2
+    };
 
+    // Data Source
+    SLDataFormat_PCM format_pcm = {
+            SL_DATAFORMAT_PCM, // pcm格式的
+            2, //双通道
+            SL_SAMPLINGRATE_44_1, //每秒的采样率
+            SL_PCMSAMPLEFORMAT_FIXED_16, //每个采样的位数
+            SL_PCMSAMPLEFORMAT_FIXED_16, //和位数一样就行
+            SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT, //立体声（左迁和右前）
+            SL_BYTEORDER_LITTLEENDIAN, //播放结束的标志
+    };
+    SLDataSource dataSource = {&loc_bufq, &format_pcm};
+
+    // Data sink
+    SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
+    SLDataSink dataSink = {&loc_outmix, NULL};
+
+    // create audio player
+    const SLInterfaceID iids[3] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND, SL_IID_VOLUME};
+    const SLboolean ireq[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+    (*engineEngine)->CreateAudioPlayer(engineEngine, &playerObject, &dataSource, &dataSink, 3, iids,
+                                       ireq);
+    (*playerObject)->Realize(playerObject, SL_BOOLEAN_FALSE);
+    // 获取播放接口
+    (*playerObject)->GetInterface(playerObject, SL_IID_PLAY, &player);
+
+    ////////////////////////////////////////////////////////////////////////
+    // 4。获取缓冲队列接口、给缓冲队列注册回调函数
+    (*playerObject)->GetInterface(playerObject, SL_IID_BUFFERQUEUE, &bufferQueueItf);
+    (*bufferQueueItf)->RegisterCallback(bufferQueueItf, bufferQueueCallable, NULL);
+
+    ////////////////////////////////////////////////////////////////////////
+    // 5。设置播放状态、主动调用一次回调使缓存队列接口工作
+    (*player)->SetPlayState(player, SL_PLAYSTATE_PLAYING);
+    bufferQueueCallable(bufferQueueItf, NULL);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_MainActivity_releaseAudio2(JNIEnv *env, jobject thiz) {
+    if (playerObject != NULL) {
+        (*playerObject)->Destroy(playerObject);
+        playerObject = NULL;
+        bufferQueueItf = NULL;
+    }
+
+    if (outputMixObject != NULL) {
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject = NULL;
+        outputMixEnvironmentalReverb = NULL;
+    }
+
+    if (engineObject != NULL) {
+        (*engineObject)->Destroy(engineObject);
+        engineObject = NULL;
+        engineEngine = NULL;
+    }
+
+    if (buff != NULL) {
+        free(buff);
+        buff = NULL;
+    }
+}
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -1238,8 +1403,8 @@ Java_com_joyy_nativecpp_MainActivity_test039(JNIEnv *env, jobject thiz) {
         }
         while (true) {
             re = avcodec_receive_frame(cc, frame);
-            if(re != 0) break;
-            if(cc == vc) frameCount++;
+            if (re != 0) break;
+            if (cc == vc) frameCount++;
         }
     }
 
