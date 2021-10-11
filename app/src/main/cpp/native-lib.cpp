@@ -290,7 +290,7 @@ extern "C"
 JNIEXPORT
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     XLOGI("JNI_OnLoad");
-    av_jni_set_java_vm(vm, 0);
+    av_jni_set_java_vm(vm, 0); // 硬解码
     IPlayerProxy::Get()->Init(vm);
     return JNI_VERSION_1_4;
 }
@@ -341,12 +341,13 @@ Java_com_joyy_nativecpp_MainActivity_open(JNIEnv *env, jobject thiz, jstring url
 
     env->ReleaseStringUTFChars(url, _url);
 }
+static ANativeWindow *win;
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_initView(JNIEnv *env, jobject thiz, jobject surface) {
-    ANativeWindow *win = ANativeWindow_fromSurface(env, surface);
-    IPlayerProxy::Get()->InitView(win);
+    win = ANativeWindow_fromSurface(env, surface);
+//    IPlayerProxy::Get()->InitView(win);
 }
 extern "C"
 JNIEXPORT void JNICALL
@@ -1502,10 +1503,12 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     XLOGI("Java_com_joyy_nativecpp_MainActivity_test57");
     const char *url = url_mp4_v1080;
     // 1. 获取原始窗口
-    ANativeWindow *nwin = ANativeWindow_fromSurface(env, surface);
+    ANativeWindow *nwin = win;//ANativeWindow_fromSurface(env, surface);
     if (!nwin) {
         XLOGE("ANativeWindow_fromSurface failed!");
         return;
+    } else {
+        XLOGI("ANativeWindow_fromSurface success!");
     }
 
     ///////////////////
@@ -1515,10 +1518,14 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     if (display == EGL_NO_DISPLAY) {
         XLOGE("eglGetDisplay failed!");
         return;
+    } else {
+        XLOGI("eglGetDisplay success!");
     }
     if (EGL_TRUE != eglInitialize(display, 0, 0)) {
         XLOGE("eglInitialize failed!");
         return;
+    } else {
+        XLOGI("eglInitialize success!");
     }
 
     // 2 surface
@@ -1536,15 +1543,10 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     if (EGL_TRUE != eglChooseConfig(display, configSpec, &config, 1, &configNum)) {
         XLOGD("eglChooseConfig failed!");
         return;
+    } else {
+        XLOGI("eglChooseConfig success!");
     }
 
-    // 3 context 创建关联的上下文
-    const EGLint ctxAttr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, ctxAttr);
-    if (context == EGL_NO_CONTEXT) {
-        XLOGE("eglCreateContext failed!");
-        return;
-    }
 
 //    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
 //    const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
@@ -1553,12 +1555,26 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     if (winsurface == EGL_NO_SURFACE) {
         XLOGE("eglCreateWindowSurface failed!");
         return;
+    } else {
+        XLOGI("eglCreateWindowSurface success!");
+    }
+
+    // 3 context 创建关联的上下文
+    const EGLint ctxAttr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, ctxAttr);
+    if (context == EGL_NO_CONTEXT) {
+        XLOGE("eglCreateContext failed!");
+        return;
+    } else {
+        XLOGI("eglCreateContext success!");
     }
 
 
     if (EGL_TRUE != eglMakeCurrent(display, winsurface, winsurface, context)) {
         XLOGE("eglMakeCurrent failed!");
         return;
+    } else {
+        XLOGI("eglMakeCurrent success!");
     }
     XLOGI("EGL Init Success!");
 

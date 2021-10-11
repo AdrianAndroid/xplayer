@@ -17,7 +17,6 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class FPlay extends GLSurfaceView implements SurfaceHolder.Callback,
         GLSurfaceView.Renderer, View.OnClickListener {
-
     static class CallbackImpl implements SurfaceHolder.Callback {
         @Override
         public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
@@ -76,6 +75,7 @@ public class FPlay extends GLSurfaceView implements SurfaceHolder.Callback,
         // android 8.9 需要设置
         setRenderer(this);
         setOnClickListener(this);
+//        setEGLContextClientVersion(2);
     }
 
     @Override
@@ -100,19 +100,19 @@ public class FPlay extends GLSurfaceView implements SurfaceHolder.Callback,
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        super.surfaceCreated(holder);
+//        super.surfaceCreated(holder);
         if (mCallback != null) mCallback.surfaceCreated(holder);
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        super.surfaceChanged(holder, format, w, h);
+//        super.surfaceChanged(holder, format, w, h);
         if (mCallback != null) mCallback.surfaceChanged(holder, format, w, h);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        super.surfaceDestroyed(holder);
+//        super.surfaceDestroyed(holder);
         if (mCallback != null) mCallback.surfaceDestroyed(holder);
     }
 }
