@@ -3,6 +3,7 @@ package com.joyy.nativecpp;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.View;
 import androidx.annotation.NonNull;
@@ -20,17 +21,17 @@ public class FPlay extends GLSurfaceView implements SurfaceHolder.Callback,
     static class CallbackImpl implements SurfaceHolder.Callback {
         @Override
         public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-
+            Log.d("XPlay", "surfaceCreated");
         }
 
         @Override
         public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
+            Log.d("XPlay", "surfaceCreated");
         }
 
         @Override
         public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-
+            Log.d("XPlay", "surfaceCreated");
         }
     }
 

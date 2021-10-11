@@ -206,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
                 super.surfaceCreated(surfaceHolder);
+                Log.d("XPlay", "surfaceCreated");
                 initView(surfaceHolder.getSurface());
             }
         });
