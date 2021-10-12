@@ -2,6 +2,7 @@ package com.joyy.nativecpp;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -18,6 +19,7 @@ import java.io.File;
 
 /**
  * 学习JNI的知识
+ * https://blog.csdn.net/u010141160/article/details/83001142
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -92,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         binding.test59.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                test59(binding.mFPlay.getHolder().getSurface());
+                startActivity(new Intent(MainActivity.this, PlayerActivity.class));
             }
         });
         binding.test60.setOnClickListener(new View.OnClickListener() {
@@ -207,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
                 super.surfaceCreated(surfaceHolder);
                 Log.d("XPlay", "surfaceCreated");
-                initView(surfaceHolder.getSurface());
+                //initView(surfaceHolder.getSurface());
             }
         });
 

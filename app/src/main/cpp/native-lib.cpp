@@ -291,8 +291,8 @@ extern "C"
 JNIEXPORT
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     XLOGI("JNI_OnLoad");
-    av_jni_set_java_vm(vm, 0); // 硬解码
-    IPlayerProxy::Get()->Init(vm);
+//    av_jni_set_java_vm(vm, 0); // 硬解码
+//    IPlayerProxy::Get()->Init(vm);
     return JNI_VERSION_1_4;
 }
 
@@ -1432,8 +1432,8 @@ static const char *vertexShader = GET_STR(
         attribute vec4 aPosition; //顶点坐标
         attribute vec2 aTexCoord; //材质顶点坐标
         varying vec2 vTexCoord;   //输出的材质坐标
-        void main() {
-            vTexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+        void main(){
+            vTexCoord = vec2(aTexCoord.x,1.0-aTexCoord.y);
             gl_Position = aPosition;
         }
 );
@@ -1445,25 +1445,27 @@ static const char *fragYUV420P = GET_STR(
         uniform sampler2D yTexture; //输入的材质（不透明灰度，单像素）
         uniform sampler2D uTexture;
         uniform sampler2D vTexture;
-        void main() {
+        void main(){
             vec3 yuv;
             vec3 rgb;
-            yuv.r = texture2D(yTexture, vTexCoord).r;
-            yuv.g = texture2D(uTexture, vTexCoord).r - 0.5;
-            yuv.b = texture2D(vTexture, vTexCoord).r - 0.5;
-            rgb = mat3(1.0, 1.0, 1.0,
-                       0.0, -0.39465, 2.03211,
-                       1.13983, -0.58060, 0.0) * yuv;
+            yuv.r = texture2D(yTexture,vTexCoord).r;
+            yuv.g = texture2D(uTexture,vTexCoord).r - 0.5;
+            yuv.b = texture2D(vTexture,vTexCoord).r - 0.5;
+            rgb = mat3(1.0,     1.0,    1.0,
+                       0.0,-0.39465,2.03211,
+                       1.13983,-0.58060,0.0)*yuv;
             //输出像素颜色
-            gl_FragColor = vec4(rgb, 1.0);
+            gl_FragColor = vec4(rgb,1.0);
         }
 );
 
-GLint InitShader(const char *code, GLint type) {
+GLint InitShader(const char *code,GLint type)
+{
     //创建shader
     GLint sh = glCreateShader(type);
-    if (sh == 0) {
-        XLOGD("glCreateShader %d failed!", type);
+    if(sh == 0)
+    {
+        XLOGE("glCreateShader %d failed!",type);
         return 0;
     }
     //加载shader
@@ -1476,14 +1478,16 @@ GLint InitShader(const char *code, GLint type) {
 
     //获取编译情况
     GLint status;
-    glGetShaderiv(sh, GL_COMPILE_STATUS, &status);
-    if (status == 0) {
-        XLOGD("glCompileShader failed!");
+    glGetShaderiv(sh,GL_COMPILE_STATUS,&status);
+    if(status == 0)
+    {
+        XLOGE("glCompileShader failed!");
         return 0;
     }
-    XLOGD("glCompileShader success!");
+    XLOGI("glCompileShader success!");
     return sh;
 }
+
 
 //OpenGlES sharder初始化完成并编译顶点和着色器代码
 //1、获取 EGL Display 对象：eglGetDisplay()
@@ -1513,7 +1517,7 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
 
 
     // 1. 获取原始窗口
-    ANativeWindow *nwin = win;//ANativeWindow_fromSurface(env, surface);
+    ANativeWindow *nwin = ANativeWindow_fromSurface(env, surface);
     if (!nwin) {
         XLOGE("ANativeWindow_fromSurface failed!");
         return;
@@ -1716,21 +1720,21 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     buf[2] = new unsigned char[width * height / 4];
 
     for (int i = 0; i < 10000; i++) {
-        //memset(buf[0],i,width*height);
-        // memset(buf[1],i,width*height/4);
-        //memset(buf[2],i,width*height/4);
+//        XLOGI("for i %d", i);
+        memset(buf[0],i,width*height);
+         memset(buf[1],i,width*height/4);
+        memset(buf[2],i,width*height/4);
 
         //420p   yyyyyyyy uu vv
-        if (feof(fp) == 0) {
-            //yyyyyyyy
-            fread(buf[0], 1, width * height, fp);
-            fread(buf[1], 1, width * height / 4, fp);
-            fread(buf[2], 1, width * height / 4, fp);
-        }
-
-
-
-
+//        if (feof(fp) == 0) {
+//            //yyyyyyyy
+//            fread(buf[0], 1, width * height, fp);
+//            fread(buf[1], 1, width * height / 4, fp);
+//            fread(buf[2], 1, width * height / 4, fp);
+//            XLOGI("feof(fp) == 0");
+//        } else {
+//            XLOGI("feof(fp) != 0");
+//        }
 
         //激活第1层纹理,绑定到创建的opengl纹理
         glActiveTexture(GL_TEXTURE0);
