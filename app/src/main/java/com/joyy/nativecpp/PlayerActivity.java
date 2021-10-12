@@ -102,11 +102,11 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     public void readyPlay() {
-        String url = "http://res.cloudinary.com/liuyuesha/video/upload/v1475978853/广告_bl4dbp.mp4";
+        // String url = "http://res.cloudinary.com/liuyuesha/video/upload/v1475978853/广告_bl4dbp.mp4";
 //        String url = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
-            mMediaPlayer.setDataSource(this, Uri.parse(url));
+            mMediaPlayer.setDataSource("/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4");
         } catch (Exception e) {
             e.printStackTrace();
         }
