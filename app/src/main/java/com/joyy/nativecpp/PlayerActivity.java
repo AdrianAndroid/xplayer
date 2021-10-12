@@ -120,7 +120,7 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 //装载完毕回调
-                //play();
+                play();
                 Toast.makeText(PlayerActivity.this, "mMediaPlayer.setOnPreparedListener", Toast.LENGTH_SHORT).show();
             }
         });
