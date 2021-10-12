@@ -125,12 +125,13 @@
                     android:id="@+id/test57"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="OpenGlES sharder初始化完成并编译顶点和着色器代码" />
+                    android:text="OpenGlES 播放YUV" />
 
                 <Button
                     android:id="@+id/test59"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     android:text="OpenglES program 渲染程序初始化给shader传递顶点和材质顶点数据" />
 
 
@@ -138,18 +139,21 @@
                     android:id="@+id/test60"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     android:text="OpenglES opengl的yuv纹理的创建和初始化" />
 
                 <Button
                     android:id="@+id/test61"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     android:text="OpenglES opengl纹理数据修改和显示" />
 
                 <Button
                     android:id="@+id/test62"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     android:text="OpenglES 通过 opengl纹理修改完成yuv文件的播放显示" />
 
 

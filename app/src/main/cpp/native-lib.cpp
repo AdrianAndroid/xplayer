@@ -29,6 +29,7 @@ static const char *url_pcm_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cach
 static const char *url_pcm_v1080_2 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080_2.pcm";
 static const char *url_pcm_mydream = "/sdcard/Android/data/com.joyy.nativecpp/cache/mydream.pcm";
 static const char *url_mp4_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4";
+static const char *url_yuv_out = "/sdcard/Android/data/com.joyy.nativecpp/cache/out.yuv";
 static const char *url_yuv_v1080 = "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.yuv";
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -1501,7 +1502,16 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject surface) {
     XLOGI("Java_com_joyy_nativecpp_MainActivity_test57");
-    const char *url = url_mp4_v1080;
+    const char *url = url_yuv_out;
+    FILE *fp = fopen(url, "rb");
+    if (!fp) {
+        XLOGE("open file %s failed!", url);
+        return;
+    } else {
+        XLOGI("open file %s success!", url);
+    }
+
+
     // 1. 获取原始窗口
     ANativeWindow *nwin = win;//ANativeWindow_fromSurface(env, surface);
     if (!nwin) {
@@ -1583,6 +1593,177 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     GLint vsh = InitShader(vertexShader, GL_VERTEX_SHADER);
     // 片元yuv420 shader初始化
     GLint fsh = InitShader(fragYUV420P, GL_FRAGMENT_SHADER);
+
+    /////////////////////////////////////
+    //创建渲染程序
+    GLint program = glCreateProgram();
+    if (program == 0) {
+        XLOGE("glCreateProgram failed!");
+        return;
+    } else {
+        XLOGI("glCreateProgram success!");
+    }
+    //渲染程序中加入着色器代码
+    glAttachShader(program, vsh);
+    glAttachShader(program, fsh);
+
+    //  链接程序
+    glLinkProgram(program);
+    GLint status = 0;
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    if (status != GL_TRUE) {
+        XLOGE("glLinkProgram failed!");
+        return;
+    }
+    glUseProgram(program);
+    XLOGI("glLinkProgram success!");
+    ////////////////////////////////////
+
+    // 加入三纬顶点数据，两个三角形成正方形
+    static float vers[] = {
+            1.0f, -1.0f, 0.0f,
+            -1.0f, -1.0f, 0.0f,
+            1.0f, 1.0f, 0.0f,
+            -1.0f, 1.0f, 0.0f,
+    };
+    GLuint apos = (GLuint) glGetAttribLocation(program, "aPosition");
+    glEnableVertexAttribArray(apos);
+    //传递顶点
+    glVertexAttribPointer(apos, 3, GL_FLOAT, GL_FALSE, 12, vers);
+
+    // 加入材质坐标数据
+    static float txts[] = {
+            1.0f, 0.0f, //右下
+            0.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0, 1.0
+    };
+    GLuint atex = (GLuint) glGetAttribLocation(program, "aTexCoord");
+    glEnableVertexAttribArray(atex);
+    glVertexAttribPointer(atex, 2, GL_FLOAT, GL_FALSE, 8, txts);
+
+    int width = 424;
+    int height = 240;
+
+    // 材质纹理初始化
+    //设置纹理层
+    XLOGI("设置纹理层");
+    glUniform1i(glGetUniformLocation(program, "yTexture"), 0); //对于纹理第1层
+    glUniform1i(glGetUniformLocation(program, "uTexture"), 1); //对于纹理第2层
+    glUniform1i(glGetUniformLocation(program, "vTexture"), 2); //对于纹理第3层
+
+    // 创建opengl纹理
+    GLuint texts[3] = {0};
+    // 创建三个纹理
+    glGenTextures(3, texts);
+
+    // 设置问题属性
+    glBindTexture(GL_TEXTURE_2D, texts[0]);
+    //缩小的过滤器
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //设置纹理的格式和大小
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,           //细节基本 0默认
+                 GL_LUMINANCE,//gpu内部格式 亮度，灰度图
+                 width, height, //拉升到全屏
+                 0,             //边框
+                 GL_LUMINANCE,//数据的像素格式 亮度，灰度图 要与上面一致
+                 GL_UNSIGNED_BYTE, //像素的数据类型
+                 NULL                    //纹理的数据
+    );
+
+
+    //设置纹理属性
+    glBindTexture(GL_TEXTURE_2D, texts[1]);
+    //缩小的过滤器
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //设置纹理的格式和大小
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,           //细节基本 0默认
+                 GL_LUMINANCE,//gpu内部格式 亮度，灰度图
+                 width / 2, height / 2, //拉升到全屏
+                 0,             //边框
+                 GL_LUMINANCE,//数据的像素格式 亮度，灰度图 要与上面一致
+                 GL_UNSIGNED_BYTE, //像素的数据类型
+                 NULL                    //纹理的数据
+    );
+
+    //设置纹理属性
+    glBindTexture(GL_TEXTURE_2D, texts[2]);
+    //缩小的过滤器
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //设置纹理的格式和大小
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,           //细节基本 0默认
+                 GL_LUMINANCE,//gpu内部格式 亮度，灰度图
+                 width / 2, height / 2, //拉升到全屏
+                 0,             //边框
+                 GL_LUMINANCE,//数据的像素格式 亮度，灰度图 要与上面一致
+                 GL_UNSIGNED_BYTE, //像素的数据类型
+                 NULL                    //纹理的数据
+    );
+
+
+    ///////////////////////////////////////////////////
+    // 纹理的修改和显示
+    XLOGI("纹理的修改和显示");
+    unsigned char *buf[3] = {0};
+    buf[0] = new unsigned char[width * height];
+    buf[1] = new unsigned char[width * height / 4];
+    buf[2] = new unsigned char[width * height / 4];
+
+    for (int i = 0; i < 10000; i++) {
+        //memset(buf[0],i,width*height);
+        // memset(buf[1],i,width*height/4);
+        //memset(buf[2],i,width*height/4);
+
+        //420p   yyyyyyyy uu vv
+        if (feof(fp) == 0) {
+            //yyyyyyyy
+            fread(buf[0], 1, width * height, fp);
+            fread(buf[1], 1, width * height / 4, fp);
+            fread(buf[2], 1, width * height / 4, fp);
+        }
+
+
+
+
+
+        //激活第1层纹理,绑定到创建的opengl纹理
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texts[0]);
+        //替换纹理内容
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                        buf[0]);
+
+
+
+        //激活第2层纹理,绑定到创建的opengl纹理
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, texts[1]);
+        //替换纹理内容
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width / 2, height / 2, GL_LUMINANCE,
+                        GL_UNSIGNED_BYTE, buf[1]);
+
+
+        //激活第2层纹理,绑定到创建的opengl纹理
+        glActiveTexture(GL_TEXTURE0 + 2);
+        glBindTexture(GL_TEXTURE_2D, texts[2]);
+        //替换纹理内容
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width / 2, height / 2, GL_LUMINANCE,
+                        GL_UNSIGNED_BYTE, buf[2]);
+
+        //三维绘制
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        //窗口显示
+        eglSwapBuffers(display, winsurface);
+
+
+    }
+
 }
 
 
