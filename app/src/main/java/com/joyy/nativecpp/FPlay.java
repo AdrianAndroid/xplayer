@@ -20,17 +20,17 @@ public class FPlay extends GLSurfaceView implements SurfaceHolder.Callback,
     static class CallbackImpl implements SurfaceHolder.Callback {
         @Override
         public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-            Log.d("XPlay", "surfaceCreated");
+            Log.d("XPlay", "[CallbackImpl] surfaceCreated");
         }
 
         @Override
         public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-            Log.d("XPlay", "surfaceCreated");
+            Log.d("XPlay", "[CallbackImpl] surfaceCreated");
         }
 
         @Override
         public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-            Log.d("XPlay", "surfaceCreated");
+            Log.d("XPlay", "[CallbackImpl] surfaceCreated");
         }
     }
 
@@ -38,17 +38,17 @@ public class FPlay extends GLSurfaceView implements SurfaceHolder.Callback,
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-
+            Log.d("XPlay", "[RendererImpl] onSurfaceCreated");
         }
 
         @Override
         public void onSurfaceChanged(GL10 gl10, int i, int i1) {
-
+            Log.d("XPlay", "[RendererImpl] onSurfaceChanged");
         }
 
         @Override
         public void onDrawFrame(GL10 gl10) {
-
+            Log.d("XPlay", "[RendererImpl] onDrawFrame");
         }
     }
 

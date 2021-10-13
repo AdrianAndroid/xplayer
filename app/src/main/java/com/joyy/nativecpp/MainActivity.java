@@ -11,10 +11,13 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
+
 import java.io.File;
 
 /**
@@ -45,11 +48,11 @@ public class MainActivity extends AppCompatActivity {
 
 //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
         ActivityCompat.requestPermissions(this,
-                new String[]{
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                }
-                , 100);
+            new String[]{
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            }
+            , 100);
 //        }
 
 
@@ -200,7 +203,6 @@ public class MainActivity extends AppCompatActivity {
     //ffmpeg调用MediaCodec实现硬解码代码演示
     public native void test039();
 
-
     private boolean isPlay = false;
 
     private void initVideo() {
@@ -221,10 +223,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 isPlay = !isPlay;
-                if (isPlay)
+                if (isPlay) {
                     play();
-                else
+                } else {
                     pause();
+                }
             }
         });
 
@@ -299,7 +302,6 @@ public class MainActivity extends AppCompatActivity {
     // 测试视频
     public native void testVideo(String url);
 
-
     // 打开url
     public native void open(String url);
 
@@ -313,11 +315,9 @@ public class MainActivity extends AppCompatActivity {
 
     public native void stop();
 
-
     public void playCallBack(double pos) {
 
     }
-
 
     private void extracted() {
         // Example of a call to a native method
@@ -370,7 +370,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Object Array 相关测试代码
     public native void testObjectArray(String[] strArr);
-
 
     // jni调用Java对象方法
     public native void testCallJavaMethod();

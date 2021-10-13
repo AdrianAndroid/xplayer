@@ -3,17 +3,17 @@ package com.joyy.nativecpp;
 import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.joyy.nativecpp.databinding.ActivityPlayerBinding;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
-import com.joyy.nativecpp.databinding.ActivityPlayerBinding;
-import java.io.IOException;
 
 public class PlayerActivity extends AppCompatActivity {
 
@@ -72,7 +72,6 @@ public class PlayerActivity extends AppCompatActivity {
         });
 
     }
-
 
     public void changeVideoSize() {
         int videoWidth = mMediaPlayer.getVideoWidth();
@@ -165,7 +164,6 @@ public class PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
 
     @Override
     protected void onDestroy() {
