@@ -23,18 +23,9 @@
         android:background="#cde6c7"
         android:orientation="vertical">
 
-        <RelativeLayout
-            android:id="@+id/mContainer"
+        <com.joyy.nativecpp.yuv.YUVPlayer
             android:layout_width="match_parent"
-            android:background="@color/black"
-            android:layout_height="300dp">
-
-            <android.opengl.GLSurfaceView
-                android:id="@+id/mSurfaceView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_centerInParent="true" />
-        </RelativeLayout>
+            android:layout_height="300dp"/>
 
 
 

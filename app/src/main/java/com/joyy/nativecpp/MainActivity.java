@@ -57,15 +57,20 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
 
-        initVideo();
+        initVideo1();
+        // initVideo();
 //        extracted();
 
         // initMediaPlayer();
 
-        initTest();
+        // initTest();
 
         File file = new File(getExternalCacheDir(), "hello");
         file.mkdirs();
+    }
+
+    private void initVideo1() {
+
     }
 
     // private final MediaPlayer mMediaPlayer = new MediaPlayer();
@@ -317,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Surface getSurface() {
-        return binding.mSurfaceView.getHolder().getSurface();
+        return null;// binding.mSurfaceView.getHolder().getSurface();
     }
 
     public native void test027();
