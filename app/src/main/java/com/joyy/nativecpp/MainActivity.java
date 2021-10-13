@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             , 100);
 //        }
 
-
+        // 播放YUV视频
         initVideo1();
         // initVideo();
 //        extracted();
