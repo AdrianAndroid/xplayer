@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
+import com.joyy.nativecpp.glsurface.GLPlayerActivity;
 
 import java.io.File;
 

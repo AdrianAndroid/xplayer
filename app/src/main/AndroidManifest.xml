@@ -17,7 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Nativecpp">
         <activity
-            android:name=".GLPlayerActivity"
+            android:name=".glsurface.GLPlayerActivity"
             android:exported="true" />
         <activity
             android:name=".PlayerActivity"

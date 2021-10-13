@@ -1,4 +1,4 @@
-package com.joyy.nativecpp;
+package com.joyy.nativecpp.glsurface;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,7 +16,10 @@ public class GLPlayerActivity extends AppCompatActivity {
         binding = ActivityGlplayerBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-
+        binding.mGLSurfaceView.setEGLContextClientVersion(2);
+        binding.mGLSurfaceView
+            .setRenderer(new GLVideoRenderer(this,
+                "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4"));
 
     }
 }
