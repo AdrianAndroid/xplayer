@@ -29,7 +29,7 @@
             android:background="@color/black"
             android:layout_height="300dp">
 
-            <SurfaceView
+            <android.opengl.GLSurfaceView
                 android:id="@+id/mSurfaceView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -166,8 +166,7 @@
                     android:id="@+id/test60"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:text="OpenglES opengl的yuv纹理的创建和初始化" />
+                    android:text="GLPlayerActivity" />
 
                 <Button
                     android:id="@+id/test61"
@@ -264,11 +263,11 @@
                     android:text="ffmpeg调用MediaCodec实现硬解码代码演示" />
 
 
-                <com.joyy.nativecpp.FPlay
-                    android:id="@+id/mFPlay"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:background="@color/cardview_dark_background" />
+<!--                <com.joyy.nativecpp.FPlay-->
+<!--                    android:id="@+id/mFPlay"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="250dp"-->
+<!--                    android:background="@color/cardview_dark_background" />-->
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>

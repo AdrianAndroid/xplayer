@@ -8,6 +8,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
@@ -75,8 +76,9 @@ public class MainActivity extends AppCompatActivity {
     private final MediaPlayer mMediaPlayer = new MediaPlayer();
 
     private void initMediaPlayer() {
-        binding.mFPlay.getHolder().setKeepScreenOn(true);
-        binding.mFPlay.getHolder().addCallback(new SurfaceHolder.Callback() {
+        binding.mSurfaceView.setEGLContextClientVersion(2);
+        binding.mSurfaceView.getHolder().setKeepScreenOn(true);
+        binding.mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
                 readyPlay();
@@ -96,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         mMediaPlayer.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {
             @Override
             public void onVideoSizeChanged(MediaPlayer mediaPlayer, int i, int i1) {
-                changeVideoSize();
+                //changeVideoSize();
             }
         });
         binding.play.setOnClickListener(new View.OnClickListener() {
@@ -222,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        test57(binding.mFPlay.getHolder().getSurface());
+                        test57(getSurface());
                     }
                 }).start();
             }
@@ -236,19 +238,19 @@ public class MainActivity extends AppCompatActivity {
         binding.test60.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                test60(binding.mFPlay.getHolder().getSurface());
+                startActivity(new Intent(MainActivity.this, GLPlayerActivity.class));
             }
         });
         binding.test61.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                test61(binding.mFPlay.getHolder().getSurface());
+                test61(getSurface());
             }
         });
         binding.test62.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                test62(binding.mFPlay.getHolder().getSurface());
+                test62(getSurface());
             }
         });
 
@@ -319,6 +321,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private Surface getSurface() {
+        return binding.mSurfaceView.getHolder().getSurface();
+    }
+
     public native void test027();
 
     // av_read_frame和av_seek_frame
@@ -336,33 +342,35 @@ public class MainActivity extends AppCompatActivity {
     //ffmpeg调用MediaCodec实现硬解码代码演示
     public native void test039();
 
-    private boolean isPlay = false;
+    private final boolean isPlay = false;
 
     private void initVideo() {
-        binding.mFPlay.setCallback(new FPlay.CallbackImpl() {
-            @Override
-            public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-                super.surfaceCreated(surfaceHolder);
-                Log.d("XPlay", "surfaceCreated");
-                //initView(surfaceHolder.getSurface());
-            }
-        });
 
-        binding.mFPlay.setRender(new FPlay.RendererImpl() {
 
-        });
+        // binding.mFPlay.setCallback(new FPlay.CallbackImpl() {
+        //     @Override
+        //     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+        //         super.surfaceCreated(surfaceHolder);
+        //         Log.d("XPlay", "surfaceCreated");
+        //         //initView(surfaceHolder.getSurface());
+        //     }
+        // });
 
-        binding.mFPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                isPlay = !isPlay;
-                if (isPlay) {
-                    play();
-                } else {
-                    pause();
-                }
-            }
-        });
+        // binding.mFPlay.setRender(new FPlay.RendererImpl() {
+        //
+        // });
+
+        // binding.mFPlay.setOnClickListener(new View.OnClickListener() {
+        //     @Override
+        //     public void onClick(View view) {
+        //         isPlay = !isPlay;
+        //         if (isPlay) {
+        //             play();
+        //         } else {
+        //             pause();
+        //         }
+        //     }
+        // });
 
 
         binding.btnOpenLocal.setOnClickListener(new View.OnClickListener() {
