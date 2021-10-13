@@ -71,6 +71,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initVideo1() {
 
+        binding.btnOpenLocal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                open(binding.etLocal.getText().toString());
+            }
+        });
     }
 
     // private final MediaPlayer mMediaPlayer = new MediaPlayer();
@@ -373,12 +379,6 @@ public class MainActivity extends AppCompatActivity {
         // });
 
 
-        binding.btnOpenLocal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                open(binding.etLocal.getText().toString());
-            }
-        });
 
         binding.btnOpenRTMP.setOnClickListener(new View.OnClickListener() {
             @Override

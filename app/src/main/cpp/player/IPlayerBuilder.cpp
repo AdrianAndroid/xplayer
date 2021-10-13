@@ -30,22 +30,22 @@ IPlayer *IPlayerBuilder::BuilderPlayer(unsigned char index) {
     }
 
     // 解封装
-    IDemux *de = CreateDemux();
+    IDemux *de = CreateDemux(); // 解析数据
 
     // 视频解码
-    IDecode *vdecode = CreateDecode();
+    IDecode *vdecode = CreateDecode(); // 读出视频包
     // 音频解码
-    IDecode *adecode = CreateDecode();
+    IDecode *adecode = CreateDecode(); // 读出音频包
     // 解码器观察解封装
     de->addObs(vdecode);
     de->addObs(adecode);
 
     // 看是观察视频解码器
-    IVideoView *view = CreateVideoView();
+    IVideoView *view = CreateVideoView(); // 显示的界面
     vdecode->addObs(view);
 
     // 重采样观察音频重采样
-    IResample *resample = CreateResample();
+    IResample *resample = CreateResample(); // 音频的重采样
     adecode->addObs(resample);
 
     //音频播放观察采样

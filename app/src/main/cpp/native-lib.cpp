@@ -291,8 +291,8 @@ extern "C"
 JNIEXPORT
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     XLOGI("JNI_OnLoad");
-//    av_jni_set_java_vm(vm, 0); // 硬解码
-//    IPlayerProxy::Get()->Init(vm);
+    av_jni_set_java_vm(vm, 0); // 硬解码
+    IPlayerProxy::Get()->Init(vm);
     return JNI_VERSION_1_4;
 }
 
@@ -348,8 +348,16 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_initView(JNIEnv *env, jobject thiz, jobject surface) {
     win = ANativeWindow_fromSurface(env, surface);
-//    IPlayerProxy::Get()->InitView(win);
+    IPlayerProxy::Get()->InitView(win);
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_XPlayer_initView(JNIEnv *env, jobject thiz, jobject surface) {
+    win = ANativeWindow_fromSurface(env, surface);
+    IPlayerProxy::Get()->InitView(win);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_seek(JNIEnv *env, jobject thiz, jdouble pos) {

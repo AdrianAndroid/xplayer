@@ -23,7 +23,8 @@
         android:background="#cde6c7"
         android:orientation="vertical">
 
-        <com.joyy.nativecpp.yuv.YUVPlayer
+        <com.joyy.nativecpp.XPlayer
+            android:id="@+id/mXPlayer"
             android:layout_width="match_parent"
             android:layout_height="300dp"/>
 
@@ -42,9 +43,10 @@
 
             <EditText
                 android:id="@+id/etLocal"
+                android:singleLine="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="/sdcard/1080.mp4" />
+                android:text="/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4" />
         </LinearLayout>
 
         <LinearLayout
@@ -62,7 +64,8 @@
                 android:id="@+id/etRTMP"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="/sdcard/1080.mp4" />
+                android:singleLine="true"
+                android:text="/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4" />
         </LinearLayout>
 
 

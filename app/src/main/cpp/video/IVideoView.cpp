@@ -3,8 +3,10 @@
 //
 
 #include "IVideoView.h"
+#include "../XLog.h"
 
 void IVideoView::Update(XData data) {
     //IObserver::Update(data);
+    XLOGI("[IVideoView::Update]");
     this->Render(data);
 }

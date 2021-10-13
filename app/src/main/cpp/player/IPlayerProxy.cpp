@@ -14,7 +14,7 @@ bool IPlayerProxy::Open(const char *path) {
         player->isHardDecode = isHardDecode;
         XLOGI("IPlayerProxy::Open player is not null player=%p", &player);
         re = player->Open(path);
-        XLOGI("IPlayerProxy::Open player is not null result=%s", strerror(re));
+        XLOGI("IPlayerProxy::Open player is not null");
     } else {
         XLOGI("IPlayerProxy::Open player is null");
     }

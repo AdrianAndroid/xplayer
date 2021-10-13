@@ -3,6 +3,7 @@
 //
 
 #include "IObserver.h"
+#include "XLog.h"
 
 // 主体函数 添加观察者
 void IObserver::addObs(IObserver *obs) {
@@ -15,6 +16,7 @@ void IObserver::addObs(IObserver *obs) {
 // 同时所有观察者
 void IObserver::Notify(XData data) {
     mux.lock();
+    XLOGI("IObserver::Notify obs.size = %d", obss.size());
     for (int i = 0; i < obss.size(); i++) {
         obss[i]->Update(data);
     }

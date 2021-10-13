@@ -62,6 +62,9 @@ add_library( # Sets the name of the library.
 
         video/IVideoView.cpp
         video/GLVideoView.cpp
+        video/XTexture.cpp
+        video/XShader.cpp
+        video/XEGL.cpp
 
         XThread.cpp
         XParameter.cpp

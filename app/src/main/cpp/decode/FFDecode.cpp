@@ -33,6 +33,11 @@ bool FFDecode::Open(XParameter para, bool isHard) {
     mux.lock();
     // 2. 创建编码上下文， 并复制参数
     codec = avcodec_alloc_context3(cd);
+    if(!codec) {
+        XLOGE("avcodec_alloc_context3 failed");
+    } else {
+        XLOGI("avcodec_alloc_context3 success!");
+    }
     avcodec_parameters_to_context(codec, p);
 
     codec->thread_count = 8; //编解码的线程数
@@ -76,15 +81,23 @@ void FFDecode::Clear() {
 }
 
 bool FFDecode::SendPacket(XData pkt) {
-    if (pkt.size <= 0 || !pkt.data) return false;
+    if (pkt.size <= 0 || !pkt.data)
+    {
+        XLOGI("FFDecode::SendPacket pkt.size <= 0 || !pkt.data");
+        return false;
+    }
     mux.lock();
     if (!codec) {
+        XLOGI("FFDecode::SendPacket !codec");
         mux.unlock();
         return false;
     }
     int re = avcodec_send_packet(codec, (AVPacket *) pkt.data);
     mux.unlock();
-    if (re != 0) return false;
+    if (re != 0) {
+        XLOGI("FFDecode::SendPacket re != 0, %s", strerror(re));
+        return false;
+    }
     return true;
 }
 

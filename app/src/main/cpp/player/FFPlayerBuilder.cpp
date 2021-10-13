@@ -4,6 +4,8 @@
 
 #include "FFPlayerBuilder.h"
 #include "../demux/FFDemux.h"
+#include "../decode/FFDecode.h"
+#include "../video/GLVideoView.h"
 #include "../XLog.h"
 
 void FFPlayerBuilder::InitHard(void *vm) {
@@ -22,7 +24,8 @@ IDemux *FFPlayerBuilder::CreateDemux() {
 }
 
 IDecode *FFPlayerBuilder::CreateDecode() {
-    return nullptr;
+    IDecode *ff = new FFDecode();
+    return ff;
 }
 
 IResample *FFPlayerBuilder::CreateResample() {
@@ -30,7 +33,8 @@ IResample *FFPlayerBuilder::CreateResample() {
 }
 
 IVideoView *FFPlayerBuilder::CreateVideoView() {
-    return nullptr;
+    IVideoView *ff = new GLVideoView();
+    return ff;
 }
 
 IAudioPlay *FFPlayerBuilder::CreateAudioPlay() {

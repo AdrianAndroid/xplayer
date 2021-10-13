@@ -152,11 +152,11 @@ XData FFDemux::Read() {
         XLOGE("XData FFDemux::Read() ic is null");
         return XData();
     } else {
-        XLOGI("XData FFDemux::Read() ic is not null");
+        //XLOGI("XData FFDemux::Read() ic is not null");
     }
 
     XData d;
-    AVPacket *pkt = av_packet_alloc();
+    AVPacket *pkt = av_packet_alloc(); // 数据包
     int re = av_read_frame(ic, pkt);
     if (re != 0) {
         mux.unlock();
@@ -169,9 +169,9 @@ XData FFDemux::Read() {
     d.data = (unsigned char *) pkt;
     d.size = pkt->size;
     if (pkt->stream_index == audioStream) {
-        d.isAudio = true;
+        d.isAudio = true; // 是音频数据
     } else if (pkt->stream_index == videoStream) {
-        d.isAudio = false;
+        d.isAudio = false; // 视频数据
     } else {
         mux.unlock();
         av_packet_free(&pkt);

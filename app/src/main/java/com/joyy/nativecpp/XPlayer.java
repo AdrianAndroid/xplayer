@@ -15,7 +15,7 @@ import javax.microedition.khronos.opengles.GL10;
  * Author: flannery
  * Description:
  */
-public class XPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.Callback {
+public class XPlayer extends GLSurfaceView implements SurfaceHolder.Callback {
 
     public XPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -38,7 +38,9 @@ public class XPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.Ca
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Log.e("Xplay", "[YUVPlayer] surfaceCreated");
-        new Thread(this).start();//回调run
+        //new Thread(this).start();//回调run
+        initView(holder.getSurface());
+
     }
 
     @Override
@@ -51,19 +53,19 @@ public class XPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.Ca
         Log.e("Xplay", "[YUVPlayer] surfaceChanged");
     }
 
-    @SuppressLint("SdCardPath")
-    @Override
-    public void run() {//传GLSurfaceView地址进去
-        Log.e("XPlay", "thread name = " + Thread.currentThread().getName());
+    // @SuppressLint("SdCardPath")
+    // @Override
+    // public void run() {//传GLSurfaceView地址进去
+    //     Log.e("XPlay", "thread name = " + Thread.currentThread().getName());
 //    Open("/sdcard/outCat.yuv",getHolder().getSurface());
 //    Open("/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.yuv",getHolder().getSurface());
 //    Open("/sdcard/Android/data/yuvplayer.yuvplayer/cache/out.yuv",getHolder().getSurface());
 //         Open("/sdcard/Android/data/com.joyy.nativecpp/cache/out.yuv", getHolder().getSurface());
         // Open("/sdcard/Android/data/yuvplayer.yuvplayer/v1080.yuv",getHolder().getSurface());
 
-    }
+    // }
 
     // public native void Open(String url, Object surface);
-
+    public native void initView(Object surface);
 
 }
