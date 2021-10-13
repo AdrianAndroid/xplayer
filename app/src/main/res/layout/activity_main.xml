@@ -172,8 +172,8 @@
                     android:id="@+id/test61"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:text="OpenglES opengl纹理数据修改和显示" />
+                    android:textAllCaps="false"
+                    android:text="YUVPlayerActivity" />
 
                 <Button
                     android:id="@+id/test62"

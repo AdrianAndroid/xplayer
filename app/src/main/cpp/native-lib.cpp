@@ -1798,3 +1798,292 @@ JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_test62(JNIEnv *env, jobject thiz, jobject surface) {
     XLOGI("Java_com_joyy_nativecpp_MainActivity_test62");
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring url_, jobject surface) {
+    const char *url = env->GetStringUTFChars(url_, 0);
+
+    FILE *fp = fopen(url, "rb");
+    if (!fp){
+        XLOGE(" open file %s failed !",url);
+        return;
+    }
+
+
+    XLOGE("open url is %s",url);
+    //获取原始窗口
+    ANativeWindow *nwin = ANativeWindow_fromSurface(env,surface);
+
+    //------------------------
+    //EGL
+    //1  display 显示
+    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (display == EGL_NO_DISPLAY){
+        XLOGE("get display failed!");
+        return;
+    }
+    //初始化 后面两个参数是版本号
+    if (EGL_TRUE != eglInitialize(display,0,0)){
+        XLOGE("eglInitialize failed!");
+        return;
+    }
+
+    //2  surface （关联原始窗口）
+    //surface 配置
+    //输出配置
+    EGLConfig config;
+    EGLint  configNum;
+    //输入配置
+    EGLint  configSpec[] = {
+            EGL_RED_SIZE,  4,
+            EGL_GREEN_SIZE,4,
+            EGL_BLUE_SIZE, 4,
+            EGL_SURFACE_TYPE,
+            EGL_WINDOW_BIT,
+            EGL_NONE
+    };
+
+    if (EGL_TRUE !=  eglChooseConfig(display,configSpec,&config,1,&configNum))
+    {
+        XLOGE("eglChooseConfig failed!");
+        return;
+    }
+    //创建surface （关联原始窗口）
+    EGLSurface  winSurface = eglCreateWindowSurface(display,config,nwin,0);
+
+    if (winSurface == EGL_NO_SURFACE){
+        XLOGE("eglCreateWindowSurface failed!");
+        return;
+    }
+
+    //3  context 创建关联上下文
+    const EGLint ctxAttr[] = {
+            EGL_CONTEXT_CLIENT_VERSION,2,EGL_NONE
+    };
+
+    EGLContext  context = eglCreateContext(display,config,EGL_NO_CONTEXT,ctxAttr);
+    if (context == EGL_NO_CONTEXT){
+        XLOGE("eglCreateContext failed!");
+        return;
+    }
+    //egl 关联 openl
+    if (EGL_TRUE !=   eglMakeCurrent(display,winSurface,winSurface,context))
+    {
+        XLOGE("eglMakeCurrent failed!");
+        return;
+    }
+    XLOGE("EGL Init Success!");
+
+    //顶点和片元shader初始化
+    //顶点
+    GLint vsh = InitShader(vertexShader,GL_VERTEX_SHADER);
+    //片元yuv420
+    GLint fsh = InitShader(fragYUV420P,GL_FRAGMENT_SHADER);
+
+
+    //////////////////////////////////////////////////////////
+    //创建渲染程序
+    GLint program = glCreateProgram();
+    if (program == 0){
+        XLOGE("glCreateProgram failed!");
+        return;
+    }
+    //向渲染程序中加入着色器
+    glAttachShader(program,vsh);
+    glAttachShader(program,fsh);
+    //链接程序
+    glLinkProgram(program);
+    GLint status;
+    glGetProgramiv(program,GL_LINK_STATUS,&status);
+    if (status != GL_TRUE) {
+        XLOGE("glLinkProgram failed!");
+        return;
+    }
+    //激活渲染程序
+    glUseProgram(program);
+    XLOGE("glLinkProgram success!");
+    //////////////////////////////////////////////////////////
+
+    //加入三维顶点数据 两个三角形组成正方形
+    static float vers[] = {
+            1.0f,-1.0f,0.0f,
+            -1.0f,-1.0f,0.0f,
+            1.0f,1.0f,0.0f,
+            -1.0f,1.0f,0.0f,
+    };
+    //获取shader中的顶点变量
+    GLuint apos = (GLuint)glGetAttribLocation(program,"aPosition");
+    glEnableVertexAttribArray(apos);
+    //传递顶点
+    /*
+     * apos 传到哪
+     * 每一个点有多少个数据
+     * 格式
+     * 是否有法线向量
+     * 一个数据的偏移量
+     * 12 顶点有三个值（x,y，z）float存储 每个有4个字节 每一个值的间隔是 3*4 =12
+     * ver 顶点数据
+     * */
+    glVertexAttribPointer(apos,3,GL_FLOAT,GL_FALSE,12,vers);
+
+    //加入材质坐标数据
+    static float txts[] = {
+            1.0f,0.0f,//右下
+            0.0f,0.0f,
+            1.0f,1.0f,
+            0.0f,1.0f
+    };
+    GLuint atex = (GLuint)glGetAttribLocation(program,"aTexCoord");
+    glEnableVertexAttribArray(atex);
+    glVertexAttribPointer(atex,2,GL_FLOAT,GL_FLOAT,8,txts);
+
+    //材质纹理初始化
+
+    //1920x1080
+    int width = 424;
+    int height = 240;
+//    int width = 1920;
+//    int height = 1080;
+
+
+    //设置纹理层
+    glUniform1i(glGetUniformLocation(program,"yTexture"),0);//对于纹理第1层
+    glUniform1i(glGetUniformLocation(program,"uTexture"),1);//对于纹理第2层
+    glUniform1i(glGetUniformLocation(program,"vTexture"),2);//对于纹理第3层
+
+    //创建opengl纹理
+    /*
+     * 创建多少个纹理
+     * 存放数组
+     *
+     * */
+    GLuint texts[3] = {0};
+    glGenTextures(3,texts); //创建3个纹理
+    //设置纹理属性
+    glBindTexture(GL_TEXTURE_2D,texts[0]);//绑定纹理，下面的属性针对这个纹理设置
+    /*
+     * GL_TEXTURE_2D 2D材质
+     * GL_TEXTURE_MIN_FILTER 缩小的过滤
+     * GL_LINEAR 线性差值 当前渲染像素最近的4个纹理做加权平均值
+     *
+     * */
+    //缩小放大过滤器
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    //设置纹理的格式和大小
+    /*
+     * GL_TEXTURE_2D
+     * 显示细节的级别
+     * 内部gpu 格式 亮度 灰度图
+     * 宽
+     * 高
+     * 边框
+     * 数据的像素格式
+     * 像素的数据类型
+     * 纹理数据
+     * */
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,//默认
+                 GL_LUMINANCE,
+                 width, height, //尺寸要是2的次方  拉升到全屏
+                 0,
+                 GL_LUMINANCE,//数据的像素格式，要与上面一致
+                 GL_UNSIGNED_BYTE,// 像素的数据类型
+                 NULL
+    );
+
+
+    glBindTexture(GL_TEXTURE_2D,texts[1]);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,//默认
+                 GL_LUMINANCE,
+                 width/2, height/2, //尺寸要是2的次方  拉升到全屏
+                 0,
+                 GL_LUMINANCE,//数据的像素格式，要与上面一致
+                 GL_UNSIGNED_BYTE,// 像素的数据类型
+                 NULL
+    );
+
+    glBindTexture(GL_TEXTURE_2D,texts[2]);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,//默认
+                 GL_LUMINANCE,
+                 width/2, height/2, //尺寸要是2的次方  拉升到全屏
+                 0,
+                 GL_LUMINANCE,//数据的像素格式，要与上面一致
+                 GL_UNSIGNED_BYTE,// 像素的数据类型
+                 NULL
+    );
+
+    //////////////////////////////////////////////////////////
+    //纹理的修改和显示 把显示的纹理放入内存buf中
+
+    unsigned char *buf[3] = {0};
+    buf[0] = new unsigned char[width*height];
+    buf[1] = new unsigned char[width*height/4];
+    buf[2] = new unsigned char[width*height/4];
+
+
+
+    XLOGE("begin for loop!");
+    for (int i = 0; i < 100000; ++i) {
+//XLOGE("i = %d", i);
+//        memset(buf[0],i,width*height);
+//        memset(buf[1],i,width*height/4);
+//        memset(buf[2],i,width*height/4);
+
+        // 420p yyyyyy uu vv
+        if (feof(fp) == 0){//判断是否读到结尾
+            fread(buf[0],1,width*height,fp);
+            fread(buf[1],1,width*height/4,fp);
+            fread(buf[2],1,width*height/4,fp);
+        }
+
+        //激活第1层纹理 绑定到创建的opengl纹理
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,texts[0]);//绑定纹理
+
+        //替换纹理内容
+        /*
+         * 细节级别
+         * 偏移位置yoffset
+         * 偏移位置xoffset
+         * 宽
+         * 高
+         * 数据格式
+         * 存储搁置
+         * 纹理数据写入buf中
+         *
+         * */
+        glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,GL_LUMINANCE,GL_UNSIGNED_BYTE,buf[0]);
+
+
+        //激活第2层纹理 绑定到创建的opengl纹理
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,texts[1]);//绑定纹理
+        glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width/2,height/2,GL_LUMINANCE,GL_UNSIGNED_BYTE,buf[1]);
+
+
+
+        //激活第1层纹理 绑定到创建的opengl纹理
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D,texts[2]);//绑定纹理
+        glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width/2,height/2,GL_LUMINANCE,GL_UNSIGNED_BYTE,buf[2]);
+
+        //三维绘制
+        glDrawArrays(GL_TRIANGLE_STRIP,0,4);//从0顶点开始 一共4个顶点
+
+        //窗口显示
+        eglSwapBuffers(display,winSurface);//交换buf
+
+
+    }
+
+
+
+    env->ReleaseStringUTFChars(url_, url);
+}

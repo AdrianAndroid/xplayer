@@ -3,29 +3,23 @@ package com.joyy.nativecpp;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
-import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
 import com.joyy.nativecpp.glsurface.GLPlayerActivity;
+import com.joyy.nativecpp.yuv.YUVActivity;
 
 import java.io.File;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 /**
  * 学习JNI的知识
@@ -245,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         binding.test61.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                test61(getSurface());
+                startActivity(new Intent(MainActivity.this, YUVActivity.class));
             }
         });
         binding.test62.setOnClickListener(new View.OnClickListener() {
