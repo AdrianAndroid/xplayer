@@ -17,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Nativecpp">
         <activity
+            android:name=".yuv.YUVActivity"
+            android:exported="true" />
+        <activity
             android:name=".glsurface.GLPlayerActivity"
             android:exported="true" />
         <activity
@@ -32,9 +35,9 @@
             </intent-filter>
         </activity>
     </application>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
 </manifest>
