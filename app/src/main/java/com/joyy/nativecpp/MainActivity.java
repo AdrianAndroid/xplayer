@@ -24,6 +24,7 @@ import androidx.core.app.ActivityCompat;
 
 import com.joyy.nativecpp.databinding.ActivityMainBinding;
 import com.joyy.nativecpp.glsurface.GLPlayerActivity;
+import com.joyy.nativecpp.glsurface.GLVideoRenderer;
 
 import java.io.File;
 
@@ -62,13 +63,15 @@ public class MainActivity extends AppCompatActivity {
             , 100);
 //        }
 
+        binding.mSurfaceView.setEGLContextClientVersion(2);
+        binding.mSurfaceView.setRenderer(new GLVideoRenderer(this, ""));
 
-        initVideo();
+        // initVideo();
 //        extracted();
 
         // initMediaPlayer();
 
-        initTest();
+        // initTest();
 
         File file = new File(getExternalCacheDir(), "hello");
         file.mkdirs();
