@@ -263,11 +263,6 @@
                     android:text="ffmpeg调用MediaCodec实现硬解码代码演示" />
 
 
-<!--                <com.joyy.nativecpp.FPlay-->
-<!--                    android:id="@+id/mFPlay"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="250dp"-->
-<!--                    android:background="@color/cardview_dark_background" />-->
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>

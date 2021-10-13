@@ -69,18 +69,21 @@ public class GLVideoRenderer implements GLSurfaceView.Renderer
         synchronized (this) {
             updateSurface = false;
         }
+        // 分配直接内存空间
         vertexBuffer = ByteBuffer.allocateDirect(vertexData.length * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
             .put(vertexData);
         vertexBuffer.position(0);
 
+        // 分配直接内存空间
         textureVertexBuffer = ByteBuffer.allocateDirect(textureVertexData.length * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
             .put(textureVertexData);
         textureVertexBuffer.position(0);
 
+        // 初始化数据源
         initMediaPlayer();
     }
 
@@ -191,6 +194,7 @@ public class GLVideoRenderer implements GLSurfaceView.Renderer
         updateProjection(width, height);
     }
 
+    // 更新宽高
     private void updateProjection(int videoWidth, int videoHeight) {
         float screenRatio = (float) screenWidth / screenHeight;
         float videoRatio = (float) videoWidth / videoHeight;

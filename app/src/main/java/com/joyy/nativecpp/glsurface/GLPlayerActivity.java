@@ -17,9 +17,7 @@ public class GLPlayerActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         binding.mGLSurfaceView.setEGLContextClientVersion(2);
-        binding.mGLSurfaceView
-            .setRenderer(new GLVideoRenderer(this,
-                "/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4"));
+        binding.mGLSurfaceView.setRenderer(new GLVideoRenderer(this, ""));
 
     }
 }
