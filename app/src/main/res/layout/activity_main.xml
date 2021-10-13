@@ -23,11 +23,20 @@
         android:background="#cde6c7"
         android:orientation="vertical">
 
-        <com.joyy.nativecpp.FPlay
-            android:id="@+id/mFPlay"
+        <RelativeLayout
+            android:id="@+id/mContainer"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:background="@color/cardview_dark_background" />
+            android:background="@color/black"
+            android:layout_height="300dp">
+
+            <SurfaceView
+                android:id="@+id/mSurfaceView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true" />
+        </RelativeLayout>
+
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -120,6 +129,24 @@
                     android:text="视频"
                     android:textSize="30dp"
                     android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        android:id="@+id/play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="play" />
+
+                    <Button
+                        android:id="@+id/stop"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="stop" />
+
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/test57"
@@ -236,6 +263,12 @@
                     android:layout_height="wrap_content"
                     android:text="ffmpeg调用MediaCodec实现硬解码代码演示" />
 
+
+                <com.joyy.nativecpp.FPlay
+                    android:id="@+id/mFPlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/cardview_dark_background" />
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
