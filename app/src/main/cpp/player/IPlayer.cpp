@@ -33,20 +33,20 @@ bool IPlayer::Open(const char *path) {
     }
     // 解码 解码可能不需要，如果是解封之后就是原始数据
     XLOGI("解码 解码可能不需要，如果是解封之后就是原始数据");
-    if(!vdecode || !vdecode->Open(demux->GetVPara(), isHardDecode)){
+    if (!vdecode || !vdecode->Open(demux->GetVPara(), isHardDecode)) {
         XLOGE("vdecode->Open %s failed!", path);
     } else {
         XLOGE("vdecode->Open %s success!", path);
     }
-    if(!adecode || !adecode->Open(demux->GetAPara())) {
-        XLOGE("adecode->Open %s failed!",path);
+    if (!adecode || !adecode->Open(demux->GetAPara())) {
+        XLOGE("adecode->Open %s failed!", path);
     } else {
-        XLOGE("adecode->Open %s success!",path);
+        XLOGE("adecode->Open %s success!", path);
     }
 
     // 重采样 有可能不需要， 解码后或者解封后可能直接能播放的数据
 //    if(outPara.sample_rate <= 0)
-        outPara = demux->GetAPara();
+    outPara = demux->GetAPara();
 //    if(!resample || !resample->Open)
 
     mux.unlock();
@@ -92,9 +92,14 @@ bool IPlayer::Start() {
     } else {
         XLOGE("demux->Start success!");
     }
-//    if (adecode) adecode->Start(); // 开始音频解码
-//    if (audioPlay) audioPlay->StartPlay(outPara); // 破榜音频
-//    XThread::Start();
+    if (adecode) adecode->Start(); // 开始音频解码
+    if (audioPlay) {
+        audioPlay->StartPlay(outPara); // 破榜音频
+        XLOGI("aduioPlay->StartPlaye success!");
+    } else {
+        XLOGI("aduioPlay->StartPlaye failed!");
+    }
+    XThread::Start();
 
     mux.unlock();
     return false;

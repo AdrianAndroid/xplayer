@@ -6,6 +6,7 @@
 #include "../demux/FFDemux.h"
 #include "../decode/FFDecode.h"
 #include "../video/GLVideoView.h"
+#include "../audio/SLAudioPlay.h"
 #include "../XLog.h"
 
 void FFPlayerBuilder::InitHard(void *vm) {
@@ -38,5 +39,6 @@ IVideoView *FFPlayerBuilder::CreateVideoView() {
 }
 
 IAudioPlay *FFPlayerBuilder::CreateAudioPlay() {
-    return nullptr;
+    IAudioPlay *ff = new SLAudioPlay();
+    return ff;
 }
