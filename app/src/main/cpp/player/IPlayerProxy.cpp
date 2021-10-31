@@ -24,7 +24,11 @@ bool IPlayerProxy::Open(const char *path) {
 
 bool IPlayerProxy::Seek(double pos) {
     XLOGI("[IPlayerProxy] IPlayerProxy::Seek %f", pos);
-    return IPlayer::Seek(pos);
+    bool re = false;
+    mux.lock();
+    if (player) re = player->Seek(pos);
+    mux.unlock();
+    return re;
 }
 
 void IPlayerProxy::Close() {
@@ -43,22 +47,36 @@ bool IPlayerProxy::Start() {
 
 void IPlayerProxy::InitView(void *win) {
     XLOGI("[IPlayerProxy] IPlayerProxy::InitView");
-    IPlayer::InitView(win);
+    mux.lock();
+    if (player) {
+        player->InitView(win);
+    }
+    mux.unlock();
 }
 
 void IPlayerProxy::SetPause(bool isP) {
     XLOGI("[IPlayerProxy] IPlayerProxy::SetPause %d", isP);
-    IPlayer::SetPause(isP);
+    mux.lock();
+    if (player) player->SetPause(isP);
+    mux.unlock();
 }
 
 bool IPlayerProxy::IsPause() {
     XLOGI("[IPlayerProxy] IPlayerProxy::IsPause");
+    bool re = false;
+    mux.lock();
+    if (player) re = player->IsPause();
+    mux.unlock();
     return false;
 }
 
 double IPlayerProxy::PlayPos() {
     XLOGI("[IPlayerProxy] IPlayerProxy::IsPause");
-    return 0;
+    double pos = 0.0;
+    mux.lock();
+    if (player) pos = player->PlayPos();
+    mux.unlock();
+    return pos;
 }
 
 void IPlayerProxy::Init(void *vm) {

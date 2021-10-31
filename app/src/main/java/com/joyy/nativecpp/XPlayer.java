@@ -17,11 +17,16 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class XPlayer extends GLSurfaceView implements SurfaceHolder.Callback {
 
+    public SurfaceHolder.Callback mCallback;
+
+    public void setMCallback(SurfaceHolder.Callback mCallback) {
+        this.mCallback = mCallback;
+    }
+
     public XPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
         setRenderer(new Renderer() {
-            public void onSurfaceCreated(GL10 gl, EGLConfig config)
-            {
+            public void onSurfaceCreated(GL10 gl, EGLConfig config) {
                 //gl.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
             }
 
@@ -39,8 +44,10 @@ public class XPlayer extends GLSurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         Log.e("Xplay", "[YUVPlayer] surfaceCreated");
         //new Thread(this).start();//回调run
-        initView(holder.getSurface());
-
+        //initView(holder.getSurface());
+        if(mCallback != null) {
+            mCallback.surfaceCreated(holder);
+        }
     }
 
     @Override
@@ -61,11 +68,10 @@ public class XPlayer extends GLSurfaceView implements SurfaceHolder.Callback {
 //    Open("/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.yuv",getHolder().getSurface());
 //    Open("/sdcard/Android/data/yuvplayer.yuvplayer/cache/out.yuv",getHolder().getSurface());
 //         Open("/sdcard/Android/data/com.joyy.nativecpp/cache/out.yuv", getHolder().getSurface());
-        // Open("/sdcard/Android/data/yuvplayer.yuvplayer/v1080.yuv",getHolder().getSurface());
+    // Open("/sdcard/Android/data/yuvplayer.yuvplayer/v1080.yuv",getHolder().getSurface());
 
     // }
 
     // public native void Open(String url, Object surface);
-    public native void initView(Object surface);
-
+    //public native void initView(Object surface);
 }

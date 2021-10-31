@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -18,6 +19,7 @@ import com.joyy.nativecpp.yuv.YUVActivity;
 
 import java.io.File;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -75,6 +77,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 open(binding.etLocal.getText().toString());
+            }
+        });
+
+        binding.mXPlayer.setMCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(@NonNull SurfaceHolder holder) {
+                initView(holder.getSurface());
+            }
+
+            @Override
+            public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+
+            }
+
+            @Override
+            public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+
             }
         });
     }
@@ -377,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
         //         }
         //     }
         // });
-
 
 
         binding.btnOpenRTMP.setOnClickListener(new View.OnClickListener() {

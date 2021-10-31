@@ -123,6 +123,9 @@ void IPlayer::InitView(void *win) {
     if (videoView) {
         videoView->Close();
         videoView->SetRender(win);
+        XLOGI("viewView is SUCCESS!");
+    } else {
+        XLOGE("video view is NULL");
     }
 }
 
