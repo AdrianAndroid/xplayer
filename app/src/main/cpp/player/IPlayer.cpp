@@ -216,6 +216,7 @@ void IPlayer::Main() {
         // 获取音频的pts 告诉视频
         int apts = audioPlay->pts;
         vdecode->synPts = apts;
+//        XLOGE("apts = %d", apts);
 
         mux.unlock();
         XSleep(2);

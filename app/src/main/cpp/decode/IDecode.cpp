@@ -77,7 +77,7 @@ void IDecode::Main() {
                 } else {
                     //XLOGI("[IDecode::Main()] frame.data");
                 }
-                pts = frame.size;
+                pts = frame.pts;
                 //发送数据给观察者
                 //XLOGI("[IDecode::Main()] this->Notify(frame)");
                 this->Notify(frame);
