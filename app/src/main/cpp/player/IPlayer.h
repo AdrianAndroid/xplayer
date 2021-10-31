@@ -31,7 +31,7 @@ public:
     virtual void SetPause(bool  isP);
 
     //是否视频硬解码
-    bool isHardDecode = true;
+    bool isHardDecode = false;
 
     //音频输出参数配置
     XParameter outPara;

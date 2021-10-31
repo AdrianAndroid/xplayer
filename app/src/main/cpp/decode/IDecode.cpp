@@ -54,10 +54,10 @@ void IDecode::Main() {
         if (packs.empty()) {
             packsMutex.unlock();
             XSleep(1);
-            XLOGI("[IDecode::Main()] packs.empty()");
+            //XLOGI("[IDecode::Main()] packs.empty()");
             continue;
         } else {
-            XLOGI("[IDecode::Main()] packs not empty");
+            //XLOGI("[IDecode::Main()] packs not empty");
         }
 
         // 取出packet消费者
@@ -66,22 +66,22 @@ void IDecode::Main() {
 
         //发送数据到解码线程， 一个数据包 可能解码多个结果
         if (this->SendPacket(pack)) {
-            XLOGI("[IDecode::Main()] this->SendPacket(pack) begin!");
+            //XLOGI("[IDecode::Main()] this->SendPacket(pack) begin!");
             while (!isExit) {
                 // 获取解码数据
                 XData frame = RecvFrame();
                 if (!frame.data) {
-                    XLOGI("[IDecode::Main()] !frame.data");
+                    //XLOGI("[IDecode::Main()] !frame.data");
                     break;
                 } else {
-                    XLOGI("[IDecode::Main()] frame.data");
+                    //XLOGI("[IDecode::Main()] frame.data");
                 }
                 pts = frame.size;
                 //发送数据给观察者
-                XLOGI("[IDecode::Main()] this->Notify(frame)");
+                //XLOGI("[IDecode::Main()] this->Notify(frame)");
                 this->Notify(frame);
             }
-            XLOGI("[IDecode::Main()] this->SendPacket(pack) done!");
+            //XLOGI("[IDecode::Main()] this->SendPacket(pack) done!");
         } else {
             XLOGI("[IDecode::Main()] this->SendPacket(pack) false!");
         }

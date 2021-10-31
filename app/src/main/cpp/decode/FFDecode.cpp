@@ -49,7 +49,7 @@ bool FFDecode::Open(XParameter para, bool isHard) {
         av_strerror(re, buf, sizeof(buf) - 1);
         XLOGE("avcodec_open2 failed! %s", buf);
     } else {
-        XLOGE("avcodec_open2 success!");
+        XLOGI("avcodec_open2 success!");
     }
     if (codec->codec_type == AVMEDIA_TYPE_VIDEO) {
         this->isAudio = false;
@@ -58,7 +58,7 @@ bool FFDecode::Open(XParameter para, bool isHard) {
     }
     mux.unlock();
     XLOGI("avcodec_open2 success!");
-    return false;
+    return true;
 }
 
 void FFDecode::Close() {
@@ -108,7 +108,7 @@ XData FFDecode::RecvFrame() {
         XLOGE("codec 初始化 failed!");
         return XData();
     } else {
-        XLOGE("codec 初始化 成功!");
+        //XLOGE("codec 初始化 成功!");
     }
     if (!frame) {
         frame = av_frame_alloc();
@@ -116,10 +116,10 @@ XData FFDecode::RecvFrame() {
     int re = avcodec_receive_frame(codec, frame);
     if (re != 0) {
         mux.unlock();
-        XLOGE("avcodec_receive_frame failed!");
+        //XLOGE("avcodec_receive_frame failed!");
         return XData();
     } else {
-        XLOGE("avcodec_receive_frame success!");
+        //XLOGE("avcodec_receive_frame success!");
     }
     XData d;
     d.data = (unsigned char *) frame;

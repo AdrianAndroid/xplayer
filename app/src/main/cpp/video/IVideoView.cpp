@@ -7,6 +7,6 @@
 
 void IVideoView::Update(XData data) {
     //IObserver::Update(data);
-    XLOGI("[IVideoView::Update]");
+    //XLOGI("[IVideoView::Update]");
     this->Render(data);
 }

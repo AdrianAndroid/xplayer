@@ -164,7 +164,7 @@ XData FFDemux::Read() {
         XLOGE("XData FFDemux::Read() av_read_frame failed!");
         return XData();
     } else {
-        XLOGI("XData FFDemux::Read() av_read_frame success!");
+        //XLOGI("XData FFDemux::Read() av_read_frame success!");
     }
     d.data = (unsigned char *) pkt;
     d.size = pkt->size;

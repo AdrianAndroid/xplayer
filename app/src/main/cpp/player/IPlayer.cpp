@@ -47,7 +47,9 @@ bool IPlayer::Open(const char *path) {
     // 重采样 有可能不需要， 解码后或者解封后可能直接能播放的数据
 //    if(outPara.sample_rate <= 0)
     outPara = demux->GetAPara();
-//    if(!resample || !resample->Open)
+    if (!resample || !resample->Open(demux->GetAPara(), outPara)) {
+        XLOGE("resample->Open %s failed!", path);
+    }
 
     mux.unlock();
     return true;
@@ -84,7 +86,13 @@ bool IPlayer::Start() {
     XLOGI("[IPlayer] Start");
     mux.lock();
 
-    if (vdecode) vdecode->Start(); // 视频解码
+    if (vdecode) {
+        vdecode->Start(); // 视频解码
+        XLOGI("vdecode->Start() success!");
+    } else {
+        XLOGI("vdecode->Start() failed!");
+    }
+
     if (!demux || !demux->Start()) {
         mux.unlock();
         XLOGE("demux->Start failed!");
@@ -92,7 +100,12 @@ bool IPlayer::Start() {
     } else {
         XLOGE("demux->Start success!");
     }
-    if (adecode) adecode->Start(); // 开始音频解码
+    if (adecode) {
+        adecode->Start(); // 开始音频解码
+        XLOGE("adecode->Start() success!");
+    } else {
+        XLOGE("adecode->Start() failed!");
+    }
     if (audioPlay) {
         audioPlay->StartPlay(outPara); // 破榜音频
         XLOGI("aduioPlay->StartPlaye success!");
