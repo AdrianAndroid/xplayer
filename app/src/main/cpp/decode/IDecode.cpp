@@ -43,13 +43,14 @@ void IDecode::Main() {
         packsMutex.lock();
 
         // 判断音视频同步
-//        if (!isAudio && synPts > 0) {
-//            if (synPts < pts) {
-//                packsMutex.unlock();
-//                XSleep(1);
-//                continue;
-//            }
-//        }
+        if (!isAudio && synPts > 0) {
+            if (synPts < pts) {
+                //XLOGE("synPts = %d", synPts);
+                packsMutex.unlock();
+                XSleep(1);
+                continue;
+            }
+        }
 
         if (packs.empty()) {
             packsMutex.unlock();

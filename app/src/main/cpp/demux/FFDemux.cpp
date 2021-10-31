@@ -145,47 +145,44 @@ XParameter FFDemux::GetAPara() {
  * 2。av_read_frame
  * @return
  */
+//读取一帧数据，数据由调用者清理
 XData FFDemux::Read() {
     mux.lock();
     if (!ic) {
         mux.unlock();
-        XLOGE("XData FFDemux::Read() ic is null");
         return XData();
-    } else {
-        //XLOGI("XData FFDemux::Read() ic is not null");
     }
 
     XData d;
-    AVPacket *pkt = av_packet_alloc(); // 数据包
+    AVPacket *pkt = av_packet_alloc();
     int re = av_read_frame(ic, pkt);
     if (re != 0) {
         mux.unlock();
         av_packet_free(&pkt);
-        XLOGE("XData FFDemux::Read() av_read_frame failed!");
         return XData();
-    } else {
-        //XLOGI("XData FFDemux::Read() av_read_frame success!");
     }
+    //XLOGI("pack size is %d ptss %lld",pkt->size,pkt->pts);
     d.data = (unsigned char *) pkt;
     d.size = pkt->size;
     if (pkt->stream_index == audioStream) {
-        d.isAudio = true; // 是音频数据
+        d.isAudio = true;
     } else if (pkt->stream_index == videoStream) {
-        d.isAudio = false; // 视频数据
+        d.isAudio = false;
     } else {
         mux.unlock();
         av_packet_free(&pkt);
-        XLOGE("pkt->stream_index 不是audioStream 也不是 videoStream");
         return XData();
     }
 
-    // 转换pts
+    //转换pts
     pkt->pts = pkt->pts * (1000 * r2d(ic->streams[pkt->stream_index]->time_base));
     pkt->dts = pkt->dts * (1000 * r2d(ic->streams[pkt->stream_index]->time_base));
     d.pts = (int) pkt->pts;
+    XLOGE("demux pts %d",d.pts);
     mux.unlock();
     return d;
 }
+
 
 FFDemux::FFDemux() {
     static bool isFirst = true;

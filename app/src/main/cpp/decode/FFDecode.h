@@ -27,19 +27,6 @@ public:
     // 从线程中获取解码结果，再次调用会复用上次空间，线程不安全
     virtual XData RecvFrame();
 
-    void Update(XData pkt) override;
-
-    bool Start() override;
-
-    void Stop() override;
-
-    void setPause(bool isP) override;
-
-    bool IsPause() override;
-
-protected:
-    void Main() override;
-
 protected:
     AVCodecContext *codec = 0;
     AVFrame *frame = 0;

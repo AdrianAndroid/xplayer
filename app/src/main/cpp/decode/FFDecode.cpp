@@ -33,7 +33,7 @@ bool FFDecode::Open(XParameter para, bool isHard) {
     mux.lock();
     // 2. 创建编码上下文， 并复制参数
     codec = avcodec_alloc_context3(cd);
-    if(!codec) {
+    if (!codec) {
         XLOGE("avcodec_alloc_context3 failed");
     } else {
         XLOGI("avcodec_alloc_context3 success!");
@@ -76,39 +76,32 @@ void FFDecode::Close() {
 void FFDecode::Clear() {
     IDecode::Clear();
     mux.lock();
-    if (codec) avcodec_flush_buffers(codec);
+    if (codec)
+        avcodec_flush_buffers(codec);
     mux.unlock();
 }
 
 bool FFDecode::SendPacket(XData pkt) {
-    if (pkt.size <= 0 || !pkt.data)
-    {
-        XLOGI("FFDecode::SendPacket pkt.size <= 0 || !pkt.data");
-        return false;
-    }
+    if (pkt.size <= 0 || !pkt.data)return false;
     mux.lock();
     if (!codec) {
-        XLOGI("FFDecode::SendPacket !codec");
         mux.unlock();
         return false;
     }
     int re = avcodec_send_packet(codec, (AVPacket *) pkt.data);
     mux.unlock();
     if (re != 0) {
-        XLOGI("FFDecode::SendPacket re != 0, %s", strerror(re));
         return false;
     }
     return true;
 }
 
+//从线程中获取解码结果
 XData FFDecode::RecvFrame() {
     mux.lock();
     if (!codec) {
         mux.unlock();
-        XLOGE("codec 初始化 failed!");
         return XData();
-    } else {
-        //XLOGE("codec 初始化 成功!");
     }
     if (!frame) {
         frame = av_frame_alloc();
@@ -116,22 +109,21 @@ XData FFDecode::RecvFrame() {
     int re = avcodec_receive_frame(codec, frame);
     if (re != 0) {
         mux.unlock();
-        //XLOGE("avcodec_receive_frame failed!");
         return XData();
-    } else {
-        //XLOGE("avcodec_receive_frame success!");
     }
     XData d;
     d.data = (unsigned char *) frame;
     if (codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-        d.size = (frame->linesize[0] + frame->linesize[1] + frame->linesize[2] * frame->height);
+        d.size = (frame->linesize[0] + frame->linesize[1] + frame->linesize[2]) * frame->height;
         d.width = frame->width;
         d.height = frame->height;
     } else {
-        // 样本数 * 单通道样本数 * 通道数
+        //样本字节数 * 单通道样本数 * 通道数
         d.size = av_get_bytes_per_sample((AVSampleFormat) frame->format) * frame->nb_samples * 2;
     }
     d.format = frame->format;
+    //if(!isAudio)
+    //    XLOGE("data format is %d",frame->format);
     memcpy(d.datas, frame->data, sizeof(d.datas));
     d.pts = frame->pts;
     pts = d.pts;
@@ -141,27 +133,27 @@ XData FFDecode::RecvFrame() {
 
 // overrides a member function but is not marked 'override'
 // -Winconsistent-missing-override
-void FFDecode::Update(XData pkt) {
-    IDecode::Update(pkt);
-}
-
-bool FFDecode::Start() {
-    return XThread::Start();
-}
-
-void FFDecode::Stop() {
-    XThread::Stop();
-}
-
-void FFDecode::setPause(bool isP) {
-    XThread::setPause(isP);
-}
-
-bool FFDecode::IsPause() {
-    return XThread::IsPause();
-}
-
-void FFDecode::Main() {
-    IDecode::Main();
-}
+//void FFDecode::Update(XData pkt) {
+//    IDecode::Update(pkt);
+//}
+//
+//bool FFDecode::Start() {
+//    return XThread::Start();
+//}
+//
+//void FFDecode::Stop() {
+//    XThread::Stop();
+//}
+//
+//void FFDecode::setPause(bool isP) {
+//    XThread::setPause(isP);
+//}
+//
+//bool FFDecode::IsPause() {
+//    return XThread::IsPause();
+//}
+//
+//void FFDecode::Main() {
+//    IDecode::Main();
+//}
 
