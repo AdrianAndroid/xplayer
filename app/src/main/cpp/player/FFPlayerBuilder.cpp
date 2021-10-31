@@ -7,6 +7,7 @@
 #include "../decode/FFDecode.h"
 #include "../video/GLVideoView.h"
 #include "../audio/SLAudioPlay.h"
+#include "../resample/FFResample.h"
 #include "../XLog.h"
 
 void FFPlayerBuilder::InitHard(void *vm) {
@@ -30,7 +31,8 @@ IDecode *FFPlayerBuilder::CreateDecode() {
 }
 
 IResample *FFPlayerBuilder::CreateResample() {
-    return nullptr;
+    IResample *ff = new FFResample();
+    return ff;
 }
 
 IVideoView *FFPlayerBuilder::CreateVideoView() {
