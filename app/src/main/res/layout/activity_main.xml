@@ -136,6 +136,12 @@
                     android:layout_height="wrap_content"
                     android:text="YUVPlayer" />
 
+                <Button
+                    android:id="@+id/btnFFmpeg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="FFmpeg解码" />
+
 
                 <View
                     android:layout_width="match_parent"

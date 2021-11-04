@@ -22,8 +22,7 @@ public class YUVPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.
         super(context, attrs);
         // 设置这个才能显示
         setRenderer(new Renderer() {
-            public void onSurfaceCreated(GL10 gl, EGLConfig config)
-            {
+            public void onSurfaceCreated(GL10 gl, EGLConfig config) {
                 //gl.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
             }
 

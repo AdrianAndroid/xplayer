@@ -1818,13 +1818,11 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring url_, jobject surface) {
     const char *url = env->GetStringUTFChars(url_, 0);
-
     FILE *fp = fopen(url, "rb");
     if (!fp) {
         XLOGE(" open file %s failed !", url);
         return;
     }
-
     XLOGE("open url is %s", url);
     //------------------------
     //EGL

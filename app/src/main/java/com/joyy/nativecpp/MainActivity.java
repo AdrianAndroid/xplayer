@@ -92,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, YUVActivity.class));
             }
         });
+        binding.btnFFmpeg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                test039();
+            }
+        });
     }
 
     private void initVideo1() {
