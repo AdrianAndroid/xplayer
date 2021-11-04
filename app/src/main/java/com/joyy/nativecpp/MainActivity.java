@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -69,6 +70,28 @@ public class MainActivity extends AppCompatActivity {
 
         File file = new File(getExternalCacheDir(), "hello");
         file.mkdirs();
+
+        // 测试JNI方法
+        binding.btnJni.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                extracted();
+            }
+        });
+        // 播放音频
+        binding.btnAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testAudio2();
+            }
+        });
+        // 播放视频
+        binding.btnYUV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, YUVActivity.class));
+            }
+        });
     }
 
     private void initVideo1() {
@@ -479,20 +502,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void extracted() {
-        // Example of a call to a native method
+        // 测试传递字符串
         TextView tv = binding.sampleText;
         tv.setText(stringFromJNI());
-
         Log.d("XPlay", "testJString\n\n");
         testJString(">>testJString!<<");
 
+        // 测试传递数组(int数组 和 字符串数组)
         Log.d("XPlay", "testIntArray\n\n");
         testIntArray(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0});
         testObjectArray(new String[]{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"});
 
-
+        // jni调用Java对象方法
         testCallJavaMethod();
+        // jni调用Java静态方法
         testCallStaticJavaMethod();
+        // java向jni传递对象
         Student student = new Student();
         Student.nickname = "static_nickname";//static String nickname;
         student.name = "_name";//String name;
@@ -500,9 +525,11 @@ public class MainActivity extends AppCompatActivity {
         Student.grade = 22;//static int grade;
         getJavaObjectField(student);
 
+        // 强全局引用 和 弱全局引用
         Log.d("XPlay", "testJNIReference\n\n");
         testJNIReference(new Student());
 
+        // jni抛出java异常
         Log.d("XPlay", "testJavaException\n\n");
         try {
             testJavaException();
@@ -510,6 +537,17 @@ public class MainActivity extends AppCompatActivity {
             Log.d("XPlay", "testJavaException 抛出了异常");
             e.printStackTrace();
         }
+
+        // 本地持有句柄, mNativeId为保存的句柄
+        initSDK();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // 延迟销毁
+                releaseSDK();
+            }
+        }, 2000);
     }
 
     /**

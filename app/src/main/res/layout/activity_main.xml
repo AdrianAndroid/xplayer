@@ -26,8 +26,7 @@
         <com.joyy.nativecpp.XPlayer
             android:id="@+id/mXPlayer"
             android:layout_width="match_parent"
-            android:layout_height="300dp"/>
-
+            android:layout_height="300dp" />
 
 
         <LinearLayout
@@ -43,9 +42,9 @@
 
             <EditText
                 android:id="@+id/etLocal"
-                android:singleLine="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:singleLine="true"
                 android:text="/sdcard/Android/data/com.joyy.nativecpp/cache/v1080.mp4" />
         </LinearLayout>
 
@@ -117,16 +116,42 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+
+                <Button
+                    android:id="@+id/btnJni"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="JNI基础知识" />
+
+
+                <Button
+                    android:id="@+id/btnAudio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="播放pcm" />
+
+                <Button
+                    android:id="@+id/btnYUV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="YUVPlayer" />
+
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="视频"
                     android:textSize="30dp"
                     android:textStyle="bold" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/play"
@@ -152,8 +177,8 @@
                     android:id="@+id/test59"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:visibility="visible"
-                    android:text="MeidaPlayer播放" />
+                    android:text="MeidaPlayer播放"
+                    android:visibility="visible" />
 
 
                 <Button
@@ -166,15 +191,15 @@
                     android:id="@+id/test61"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAllCaps="false"
-                    android:text="YUVPlayerActivity" />
+                    android:text="YUVPlayerActivity"
+                    android:textAllCaps="false" />
 
                 <Button
                     android:id="@+id/test62"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:text="OpenglES 通过 opengl纹理修改完成yuv文件的播放显示" />
+                    android:text="OpenglES 通过 opengl纹理修改完成yuv文件的播放显示"
+                    android:visibility="gone" />
 
 
                 <TextView

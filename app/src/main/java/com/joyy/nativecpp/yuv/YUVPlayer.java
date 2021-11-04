@@ -20,6 +20,7 @@ public class YUVPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.
 
     public YUVPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
+        // 设置这个才能显示
         setRenderer(new Renderer() {
             public void onSurfaceCreated(GL10 gl, EGLConfig config)
             {

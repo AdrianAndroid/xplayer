@@ -270,10 +270,10 @@ Java_com_joyy_nativecpp_MainActivity_releaseSDK(JNIEnv *env, jobject thiz) {
     jfieldID fid = env->GetFieldID(objectClass, "mNativeId", "J");
 
     // 取出java对象中保存的C++对象地址
-    jlong p = env->GetLongField(thiz, fid);
+    jlong p = env->GetLongField(thiz, fid); // 获取long值
 
-    //转换成C++对象
-    Person *person = (Person *) p;
+    //转换成C++对象 : Person 为C++类
+    Person *person = (Person *) p; // (强转的意义在于：从这一地址开始，对其格式)
     person->releaseSDK();
     //释放person C++对象
     free(person);
@@ -501,8 +501,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio(JNIEnv *env, jobject thiz, jstrin
     SLAndroidSimpleBufferQueueItf pcmQue = NULL;
     const SLInterfaceID ids[] = {SL_IID_BUFFERQUEUE};
     const SLboolean req[] = {SL_BOOLEAN_TRUE};
-    re = (*eng)->CreateAudioPlayer(eng, &player, &ds, &audioSink,
-                                   sizeof(ids) / sizeof(SLInterfaceID), ids, req);
+    re = (*eng)->CreateAudioPlayer(eng, &player, &ds, &audioSink, sizeof(ids) / sizeof(SLInterfaceID), ids, req);
     if (re != SL_RESULT_SUCCESS) {
         XLOGE("(*eng)->CreateAudioPlayer failed!");
     } else {
@@ -615,6 +614,7 @@ Java_com_joyy_nativecpp_MainActivity_testAudio2(JNIEnv *env, jobject thiz) {
         XLOGE("can not open file:%s", c_url);
         return;
     }
+    // 设置一块儿缓冲空间
     buff = static_cast<u_int8_t *>(malloc(44100 * 2 * 2));
     SLresult sLresult = -1;
     ////////////////////////////////////////////////////////////////////////
@@ -646,7 +646,6 @@ Java_com_joyy_nativecpp_MainActivity_testAudio2(JNIEnv *env, jobject thiz) {
             SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,
             2
     };
-
     // Data Source
     SLDataFormat_PCM format_pcm = {
             SL_DATAFORMAT_PCM, // pcm格式的
@@ -1434,14 +1433,15 @@ Java_com_joyy_nativecpp_MainActivity_test039(JNIEnv *env, jobject thiz) {
 //OpenGlES sharder初始化完成并编译顶点和着色器代码
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
+//(111) 着色器代码，跟C语言相近 要以字符串形式传给OpenGL API
 //顶点着色器glsl
 #define GET_STR(x) #x
 static const char *vertexShader = GET_STR(
         attribute vec4 aPosition; //顶点坐标
         attribute vec2 aTexCoord; //材质顶点坐标
         varying vec2 vTexCoord;   //输出的材质坐标
-        void main(){
-            vTexCoord = vec2(aTexCoord.x,1.0-aTexCoord.y);
+        void main() {
+            vTexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
             gl_Position = aPosition;
         }
 );
@@ -1453,42 +1453,42 @@ static const char *fragYUV420P = GET_STR(
         uniform sampler2D yTexture; //输入的材质（不透明灰度，单像素）
         uniform sampler2D uTexture;
         uniform sampler2D vTexture;
-        void main(){
+        void main() {
             vec3 yuv;
             vec3 rgb;
-            yuv.r = texture2D(yTexture,vTexCoord).r;
-            yuv.g = texture2D(uTexture,vTexCoord).r - 0.5;
-            yuv.b = texture2D(vTexture,vTexCoord).r - 0.5;
-            rgb = mat3(1.0,     1.0,    1.0,
-                       0.0,-0.39465,2.03211,
-                       1.13983,-0.58060,0.0)*yuv;
+            yuv.r = texture2D(yTexture, vTexCoord).r;
+            yuv.g = texture2D(uTexture, vTexCoord).r - 0.5;
+            yuv.b = texture2D(vTexture, vTexCoord).r - 0.5;
+            rgb = mat3(1.0, 1.0, 1.0,
+                       0.0, -0.39465, 2.03211,
+                       1.13983, -0.58060, 0.0) * yuv;
             //输出像素颜色
-            gl_FragColor = vec4(rgb,1.0);
+            gl_FragColor = vec4(rgb, 1.0);
         }
 );
 
-GLint InitShader(const char *code,GLint type)
-{
+// (222)初始化shader，加载并编译
+GLint InitShader(const char *code, GLint type) {
     //创建shader
+    // 222-1 创建shader，type传入GL_VERTEX_SHADER（顶点）或GL_FRAGMENT_SHADER（片元）
     GLint sh = glCreateShader(type);
-    if(sh == 0)
-    {
-        XLOGE("glCreateShader %d failed!",type);
+    if (sh == 0) {
+        XLOGE("glCreateShader %d failed!", type);
         return 0;
     }
     //加载shader
+    // 222-2 加载shader
     glShaderSource(sh,
                    1,    //shader数量
                    &code, //shader代码
                    0);   //代码长度
     //编译shader
+    // 222-3 编译shader并获取编译情况
     glCompileShader(sh);
-
     //获取编译情况
     GLint status;
-    glGetShaderiv(sh,GL_COMPILE_STATUS,&status);
-    if(status == 0)
-    {
+    glGetShaderiv(sh, GL_COMPILE_STATUS, &status);
+    if (status == 0) {
         XLOGE("glCompileShader failed!");
         return 0;
     }
@@ -1607,7 +1607,9 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     GLint fsh = InitShader(fragYUV420P, GL_FRAGMENT_SHADER);
 
     /////////////////////////////////////
+    //（333）创建渲染程序，并在渲染程序中加入vertex与fragment shader， 这个program用作后面绘图使用
     //创建渲染程序
+    // 333-1 create programe
     GLint program = glCreateProgram();
     if (program == 0) {
         XLOGE("glCreateProgram failed!");
@@ -1616,9 +1618,10 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
         XLOGI("glCreateProgram success!");
     }
     //渲染程序中加入着色器代码
+    // 333-2 渲染程序中加入着色器代码，shader是glCreateShader返回的顶点与片元shader
     glAttachShader(program, vsh);
     glAttachShader(program, fsh);
-
+    // 333-3 链接程序并使用program
     //  链接程序
     glLinkProgram(program);
     GLint status = 0;
@@ -1631,12 +1634,14 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
     XLOGI("glLinkProgram success!");
     ////////////////////////////////////
 
+    // （444）加入三维顶点数据和纹理坐标数据
     // 加入三纬顶点数据，两个三角形成正方形
+    //https://img-blog.csdnimg.cn/2020030818132550.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE4MzQ5MDIx,size_16,color_FFFFFF,t_70
     static float vers[] = {
-            1.0f, -1.0f, 0.0f,
-            -1.0f, -1.0f, 0.0f,
-            1.0f, 1.0f, 0.0f,
-            -1.0f, 1.0f, 0.0f,
+            1.0f, -1.0f, 0.0f, // A
+            -1.0f, -1.0f, 0.0f,// B
+            1.0f, 1.0f, 0.0f,  // C
+            -1.0f, 1.0f, 0.0f, // D
     };
     GLuint apos = (GLuint) glGetAttribLocation(program, "aPosition");
     glEnableVertexAttribArray(apos);
@@ -1729,9 +1734,9 @@ Java_com_joyy_nativecpp_MainActivity_test57(JNIEnv *env, jobject thiz, jobject s
 
     for (int i = 0; i < 10000; i++) {
 //        XLOGI("for i %d", i);
-        memset(buf[0],i,width*height);
-         memset(buf[1],i,width*height/4);
-        memset(buf[2],i,width*height/4);
+        memset(buf[0], i, width * height);
+        memset(buf[1], i, width * height / 4);
+        memset(buf[2], i, width * height / 4);
 
         //420p   yyyyyyyy uu vv
 //        if (feof(fp) == 0) {
@@ -1806,103 +1811,107 @@ JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_MainActivity_test62(JNIEnv *env, jobject thiz, jobject surface) {
     XLOGI("Java_com_joyy_nativecpp_MainActivity_test62");
 }
+
+//https://blog.csdn.net/qq_18349021/article/details/104737832
+//https://blog.csdn.net/qq_18349021/article/details/104737832
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring url_, jobject surface) {
     const char *url = env->GetStringUTFChars(url_, 0);
 
     FILE *fp = fopen(url, "rb");
-    if (!fp){
-        XLOGE(" open file %s failed !",url);
+    if (!fp) {
+        XLOGE(" open file %s failed !", url);
         return;
     }
 
-
-    XLOGE("open url is %s",url);
-    //获取原始窗口
-    ANativeWindow *nwin = ANativeWindow_fromSurface(env,surface);
-
+    XLOGE("open url is %s", url);
     //------------------------
     //EGL
-    //1  display 显示
+    //获取原始窗口
+    //（1）获取当前平台窗口
+    ANativeWindow *nwin = ANativeWindow_fromSurface(env, surface);
+
+    //1  display 显示  创建EGL display并初始化
+    //（2）创建EGL display并初始化
     EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (display == EGL_NO_DISPLAY){
+    if (display == EGL_NO_DISPLAY) {
         XLOGE("get display failed!");
         return;
     }
     //初始化 后面两个参数是版本号
-    if (EGL_TRUE != eglInitialize(display,0,0)){
+    if (EGL_TRUE != eglInitialize(display, 0, 0)) {
         XLOGE("eglInitialize failed!");
         return;
     }
-
+    //（3）创建EGLSurface
     //2  surface （关联原始窗口）
     //surface 配置
     //输出配置
     EGLConfig config;
-    EGLint  configNum;
+    EGLint configNum;
     //输入配置
-    EGLint  configSpec[] = {
-            EGL_RED_SIZE,  4,
-            EGL_GREEN_SIZE,4,
+    EGLint configSpec[] = {
+            EGL_RED_SIZE, 4,
+            EGL_GREEN_SIZE, 4,
             EGL_BLUE_SIZE, 4,
             EGL_SURFACE_TYPE,
             EGL_WINDOW_BIT,
             EGL_NONE
     };
-
-    if (EGL_TRUE !=  eglChooseConfig(display,configSpec,&config,1,&configNum))
-    {
+    // 输出配置
+    if (EGL_TRUE != eglChooseConfig(display, configSpec, &config, 1, &configNum)) {
         XLOGE("eglChooseConfig failed!");
         return;
     }
-    //创建surface （关联原始窗口）
-    EGLSurface  winSurface = eglCreateWindowSurface(display,config,nwin,0);
+    //创建surface （关联原始窗口） 创建surface, 这里根据之前创建并配置的egl_display跟nativewindow生成egl_surface
+    EGLSurface winSurface = eglCreateWindowSurface(display, config, nwin, 0);
 
-    if (winSurface == EGL_NO_SURFACE){
+    if (winSurface == EGL_NO_SURFACE) {
         XLOGE("eglCreateWindowSurface failed!");
         return;
     }
 
-    //3  context 创建关联上下文
-    const EGLint ctxAttr[] = {
-            EGL_CONTEXT_CLIENT_VERSION,2,EGL_NONE
-    };
-
-    EGLContext  context = eglCreateContext(display,config,EGL_NO_CONTEXT,ctxAttr);
-    if (context == EGL_NO_CONTEXT){
+    //（4）创建EGL上下文
+    //3  context 创建关联上下文  创建EGL上下文
+    const EGLint ctxAttr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, ctxAttr);
+    if (context == EGL_NO_CONTEXT) {
         XLOGE("eglCreateContext failed!");
         return;
     }
     //egl 关联 openl
-    if (EGL_TRUE !=   eglMakeCurrent(display,winSurface,winSurface,context))
-    {
+    if (EGL_TRUE != eglMakeCurrent(display, winSurface, winSurface, context)) {
         XLOGE("eglMakeCurrent failed!");
         return;
     }
     XLOGE("EGL Init Success!");
 
     //顶点和片元shader初始化
-    //顶点
-    GLint vsh = InitShader(vertexShader,GL_VERTEX_SHADER);
-    //片元yuv420
-    GLint fsh = InitShader(fragYUV420P,GL_FRAGMENT_SHADER);
+    //顶点着色器
+    // (222) 初始化shader，加载并编译
+    GLint vsh = InitShader(vertexShader, GL_VERTEX_SHADER);
+    //片元着色器yuv420
+    GLint fsh = InitShader(fragYUV420P, GL_FRAGMENT_SHADER);
 
 
     //////////////////////////////////////////////////////////
+    // （333）创建渲染程序，并在渲染程序中加入vertex与fragment shader，这个program用作后面绘图使用
     //创建渲染程序
+    // 333-1 create program
     GLint program = glCreateProgram();
-    if (program == 0){
+    if (program == 0) {
         XLOGE("glCreateProgram failed!");
         return;
     }
+    // 333-2 渲染程序中加入着色器代码，shader是glCreateShader返回的顶点与片元shader
     //向渲染程序中加入着色器
-    glAttachShader(program,vsh);
-    glAttachShader(program,fsh);
+    glAttachShader(program, vsh);
+    glAttachShader(program, fsh);
     //链接程序
     glLinkProgram(program);
     GLint status;
-    glGetProgramiv(program,GL_LINK_STATUS,&status);
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (status != GL_TRUE) {
         XLOGE("glLinkProgram failed!");
         return;
@@ -1911,16 +1920,18 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
     glUseProgram(program);
     XLOGE("glLinkProgram success!");
     //////////////////////////////////////////////////////////
-
-    //加入三维顶点数据 两个三角形组成正方形
+    //（444）加入三维顶点数据和纹理坐标数据
+    //加入三维顶点数据 两个三角形组成正方形 https://img-blog.csdnimg.cn/2020030818132550.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE4MzQ5MDIx,size_16,color_FFFFFF,t_70
     static float vers[] = {
-            1.0f,-1.0f,0.0f,
-            -1.0f,-1.0f,0.0f,
-            1.0f,1.0f,0.0f,
-            -1.0f,1.0f,0.0f,
+            1.0f, -1.0f, 0.0f, // A
+            -1.0f, -1.0f, 0.0f,// B
+            1.0f, 1.0f, 0.0f,  // C
+            -1.0f, 1.0f, 0.0f, // D
     };
     //获取shader中的顶点变量
-    GLuint apos = (GLuint)glGetAttribLocation(program,"aPosition");
+    // 这里的position跟我们vertextshader中的要保证一致
+    GLuint apos = (GLuint) glGetAttribLocation(program, "aPosition");
+    // 把我们上面定义好的顶点数据传递给vertextShader中的aPosition
     glEnableVertexAttribArray(apos);
     //传递顶点
     /*
@@ -1932,18 +1943,19 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
      * 12 顶点有三个值（x,y，z）float存储 每个有4个字节 每一个值的间隔是 3*4 =12
      * ver 顶点数据
      * */
-    glVertexAttribPointer(apos,3,GL_FLOAT,GL_FALSE,12,vers);
-
-    //加入材质坐标数据
+    glVertexAttribPointer(apos, 3, GL_FLOAT, GL_FALSE, 12, vers);
+    // 加入纹理坐标数据
+    //加入材质坐标数据 https://img-blog.csdnimg.cn/202003081814198.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE4MzQ5MDIx,size_16,color_FFFFFF,t_70
     static float txts[] = {
-            1.0f,0.0f,//右下
-            0.0f,0.0f,
-            1.0f,1.0f,
-            0.0f,1.0f
+            1.0f, 0.0f,//右下
+            0.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f
     };
-    GLuint atex = (GLuint)glGetAttribLocation(program,"aTexCoord");
+    // 与顶点坐标一样，给纹理坐标赋值
+    GLuint atex = (GLuint) glGetAttribLocation(program, "aTexCoord");
     glEnableVertexAttribArray(atex);
-    glVertexAttribPointer(atex,2,GL_FLOAT,GL_FLOAT,8,txts);
+    glVertexAttribPointer(atex, 2, GL_FLOAT, GL_FLOAT, 8, txts);
 
     //材质纹理初始化
 
@@ -1953,22 +1965,24 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
 //    int width = 1920;
 //    int height = 1080;
 
-
+    //（555）创建设置纹理层并坐纹理初始化
+    // 5。 创建设置纹理层闭关做纹理初始化
     //设置纹理层
-    glUniform1i(glGetUniformLocation(program,"yTexture"),0);//对于纹理第1层
-    glUniform1i(glGetUniformLocation(program,"uTexture"),1);//对于纹理第2层
-    glUniform1i(glGetUniformLocation(program,"vTexture"),2);//对于纹理第3层
+    glUniform1i(glGetUniformLocation(program, "yTexture"), 0);//对于纹理第1层
+    glUniform1i(glGetUniformLocation(program, "uTexture"), 1);//对于纹理第2层
+    glUniform1i(glGetUniformLocation(program, "vTexture"), 2);//对于纹理第3层
 
-    //创建opengl纹理
     /*
      * 创建多少个纹理
      * 存放数组
      *
      * */
+    //创建opengl纹理
     GLuint texts[3] = {0};
-    glGenTextures(3,texts); //创建3个纹理
-    //设置纹理属性
-    glBindTexture(GL_TEXTURE_2D,texts[0]);//绑定纹理，下面的属性针对这个纹理设置
+    // 创建三个纹理
+    glGenTextures(3, texts); //创建3个纹理
+    //设置纹理属性 给"y"层纹理属性
+    glBindTexture(GL_TEXTURE_2D, texts[0]);//绑定纹理，下面的属性针对这个纹理设置
     /*
      * GL_TEXTURE_2D 2D材质
      * GL_TEXTURE_MIN_FILTER 缩小的过滤
@@ -1976,8 +1990,8 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
      *
      * */
     //缩小放大过滤器
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //设置纹理的格式和大小
     /*
      * GL_TEXTURE_2D
@@ -1991,50 +2005,55 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
      * 纹理数据
      * */
     glTexImage2D(GL_TEXTURE_2D,
-                 0,//默认
-                 GL_LUMINANCE,
-                 width, height, //尺寸要是2的次方  拉升到全屏
-                 0,
-                 GL_LUMINANCE,//数据的像素格式，要与上面一致
+                 0,       // 默认
+                 GL_LUMINANCE,  // gpu内部格式 亮度， 灰度图
+                 width, height, // 尺寸要是2的次方  拉升到全屏
+                 0,      // 边框
+                 GL_LUMINANCE,  //数据的像素格式，要与上面一致
                  GL_UNSIGNED_BYTE,// 像素的数据类型
-                 NULL
+                 NULL     // 纹理的数据
     );
 
-
-    glBindTexture(GL_TEXTURE_2D,texts[1]);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    // 设置u的纹理属性
+    glBindTexture(GL_TEXTURE_2D, texts[1]);
+    // 缩小的过滤器
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // 设置纹理的格式和大小
     glTexImage2D(GL_TEXTURE_2D,
-                 0,//默认
-                 GL_LUMINANCE,
-                 width/2, height/2, //尺寸要是2的次方  拉升到全屏
-                 0,
-                 GL_LUMINANCE,//数据的像素格式，要与上面一致
+                 0,        // 默认
+                 GL_LUMINANCE,   // gpu内部格式 亮度，灰度图
+                 width / 2, height / 2, //尺寸要是2的次方  拉升到全屏
+                 0,       // 边框
+                 GL_LUMINANCE,   // 数据的像素格式，要与上面一致
                  GL_UNSIGNED_BYTE,// 像素的数据类型
-                 NULL
+                 NULL     // 纹理的数据
     );
 
-    glBindTexture(GL_TEXTURE_2D,texts[2]);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    // 设置v的纹理属性
+    glBindTexture(GL_TEXTURE_2D, texts[2]);
+    // 最小的过滤器
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // 设置纹理的格式和大小
     glTexImage2D(GL_TEXTURE_2D,
-                 0,//默认
-                 GL_LUMINANCE,
-                 width/2, height/2, //尺寸要是2的次方  拉升到全屏
-                 0,
-                 GL_LUMINANCE,//数据的像素格式，要与上面一致
+                 0,         // 默认
+                 GL_LUMINANCE,    // gpu内部格式 亮度，灰度图
+                 width / 2, height / 2, //尺寸要是2的次方  拉升到全屏
+                 0,        // 边框
+                 GL_LUMINANCE,    // 数据的像素格式，要与上面一致
                  GL_UNSIGNED_BYTE,// 像素的数据类型
-                 NULL
+                 NULL      // 纹理的数据
     );
 
     //////////////////////////////////////////////////////////
     //纹理的修改和显示 把显示的纹理放入内存buf中
-
+    // （666）激活纹理、替换纹理内容并显示
+    // 若buf[0]存y，buf[1]存u，buf[2]存v，则buf[0]分配的空间是uv buffer空间的4倍(YUV420P：YYYY U V)
     unsigned char *buf[3] = {0};
-    buf[0] = new unsigned char[width*height];
-    buf[1] = new unsigned char[width*height/4];
-    buf[2] = new unsigned char[width*height/4];
-
+    buf[0] = new unsigned char[width * height];
+    buf[1] = new unsigned char[width * height / 4];
+    buf[2] = new unsigned char[width * height / 4];
 
 
     XLOGE("begin for loop!");
@@ -2045,15 +2064,15 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
 //        memset(buf[2],i,width*height/4);
 
         // 420p yyyyyy uu vv
-        if (feof(fp) == 0){//判断是否读到结尾
-            fread(buf[0],1,width*height,fp);
-            fread(buf[1],1,width*height/4,fp);
-            fread(buf[2],1,width*height/4,fp);
+        if (feof(fp) == 0) {//判断是否读到结尾
+            fread(buf[0], 1, width * height, fp);
+            fread(buf[1], 1, width * height / 4, fp);
+            fread(buf[2], 1, width * height / 4, fp);
         }
 
         //激活第1层纹理 绑定到创建的opengl纹理
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,texts[0]);//绑定纹理
+        glBindTexture(GL_TEXTURE_2D, texts[0]);//绑定纹理
 
         //替换纹理内容
         /*
@@ -2067,30 +2086,29 @@ Java_com_joyy_nativecpp_yuv_YUVPlayer_Open(JNIEnv *env, jobject thiz, jstring ur
          * 纹理数据写入buf中
          *
          * */
-        glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,GL_LUMINANCE,GL_UNSIGNED_BYTE,buf[0]);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, buf[0]);
 
 
         //激活第2层纹理 绑定到创建的opengl纹理
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,texts[1]);//绑定纹理
-        glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width/2,height/2,GL_LUMINANCE,GL_UNSIGNED_BYTE,buf[1]);
+        glBindTexture(GL_TEXTURE_2D, texts[1]);//绑定纹理
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width / 2, height / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE, buf[1]);
 
 
 
         //激活第1层纹理 绑定到创建的opengl纹理
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D,texts[2]);//绑定纹理
-        glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width/2,height/2,GL_LUMINANCE,GL_UNSIGNED_BYTE,buf[2]);
+        glBindTexture(GL_TEXTURE_2D, texts[2]);//绑定纹理
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width / 2, height / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE, buf[2]);
 
         //三维绘制
-        glDrawArrays(GL_TRIANGLE_STRIP,0,4);//从0顶点开始 一共4个顶点
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);//从0顶点开始 一共4个顶点
 
         //窗口显示
-        eglSwapBuffers(display,winSurface);//交换buf
+        eglSwapBuffers(display, winSurface);//交换buf
 
 
     }
-
 
 
     env->ReleaseStringUTFChars(url_, url);
