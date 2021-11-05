@@ -1298,7 +1298,7 @@ Java_com_joyy_nativecpp_MainActivity_test039(JNIEnv *env, jobject thiz) {
 
     ///////////////////////////////////////////////////////////////////////
     // 遍历流信息
-    int fps = 0;
+    int fps = 0; // 1秒的视频帧数目
     int videoStream = 0;
     int audioStream = 1;
     for (int i = 0; i < ic->nb_streams; i++) {
